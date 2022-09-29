@@ -1,0 +1,21 @@
+:root {
+  --verde: #6cb46c;
+  --verde-oscuro: #009048;
+  --azul-oscuro: #001997;
+  --azul-claro: #006cfc;
+  --rojo-oscuro: #dc5b49;
+  --rojo-suave: #894949ef;
+  --negro: #000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.titulo {
+  color: var(--verde);
+}
