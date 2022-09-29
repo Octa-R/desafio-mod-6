@@ -1,0 +1,5 @@
+node_modules
+public
+.parcel-cache
+.env
+key.json
