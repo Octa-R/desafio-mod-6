@@ -1,6 +1,7 @@
 import { Storage } from "./types/storage";
 import { State } from "./types/state";
 import { Play } from "./types/play";
+import { Router } from "@vaadin/router";
 const moveList: Play[] = ["tijeras", "papel", "piedra"];
 export const state: State = {
   data: {
@@ -9,24 +10,27 @@ export const state: State = {
       computer: [],
       results: [],
     },
+    roomId: "",
+    rtdbRoomId: "",
   },
+  storageKey: "game-state",
   listeners: [],
   storage: new Storage(),
   init() {
-    console.log("state init");
-    const { data } = this.storage.get("saved-state");
+    Router.go(location.pathname);
+    const { data } = this.storage.get(this.storageKey);
     const newState = { ...this.data.game, ...data };
     this.setState(newState);
   },
   setState(data) {
     this.data = data;
-    this.storage.save("saved-state", data);
+    this.storage.save(this.storageKey, data);
     for (const cb of this.listeners) {
       cb(this.getState());
     }
   },
   getState() {
-    const data = this.storage.get("saved-state");
+    const data = this.storage.get(this.storageKey);
     return data;
   },
   subscribe(callback) {
@@ -71,22 +75,16 @@ export const state: State = {
       }
     }
   },
-  matchResult(results: number[]) {
-    //quien va ganando en TOTAL,
-    // todo: ver si la funcion queda o se va
-    const result = results.reduce((a, b) => a + b);
-    return result == 0 ? "empate" : result > 0 ? "player" : "computer";
+  getPlayerScore() {
+    const game = this.getState();
+    return game.results.reduce((prev, act) => {
+      return act > 0 ? prev + 1 : prev;
+    }, 0);
   },
   getComputerScore() {
     const game = this.getState();
     return game.results.reduce((prev, act) => {
       return act < 0 ? prev + 1 : prev;
-    }, 0);
-  },
-  getPlayerScore() {
-    const game = this.getState();
-    return game.results.reduce((prev, act) => {
-      return act > 0 ? prev + 1 : prev;
     }, 0);
   },
   getLastResult() {
@@ -99,6 +97,5 @@ export const state: State = {
       computer: [],
       results: [],
     });
-    // this.setState();
   },
 };

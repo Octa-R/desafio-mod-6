@@ -1,25 +1,25 @@
+import { Router } from "@vaadin/router";
 const imageURL = require("url:../../img/fondo.png");
-export function initInstructionsPage({ goTo }) {
-  class InstructionsPage extends HTMLElement {
-    shadow: ShadowRoot;
-    constructor() {
-      super();
-      this.shadow = this.attachShadow({ mode: "open" });
-    }
-    connectedCallback() {
-      this.render();
-    }
+class InstructionsPage extends HTMLElement {
+  shadow: ShadowRoot;
+  constructor() {
+    super();
+    this.shadow = this.attachShadow({ mode: "open" });
+  }
+  connectedCallback() {
+    this.render();
+  }
 
-    addListeners() {
-      const btn = this.shadow.querySelector("btn-component");
-      btn?.addEventListener("click", (evt) => {
-        goTo("/game");
-      });
-    }
+  addListeners() {
+    const btn = this.shadow.querySelector("btn-component");
+    btn?.addEventListener("click", (evt) => {
+      Router.go("/game");
+    });
+  }
 
-    render() {
-      const style = document.createElement("style");
-      style.innerHTML = `
+  render() {
+    const style = document.createElement("style");
+    style.innerHTML = `
         .main {
           box-sizing:border-box;
           height:100vh;
@@ -32,8 +32,8 @@ export function initInstructionsPage({ goTo }) {
           justify-content: space-between;
         }
       `;
-      const text = `Presioná jugar y elegí: piedra, papel o tijera antes de que pasen los 3 segundos.`;
-      this.shadow.innerHTML = `
+    const text = `Presioná jugar y elegí: piedra, papel o tijera antes de que pasen los 3 segundos.`;
+    this.shadow.innerHTML = `
       <main class="main">
         <text-component 
           type="p" 
@@ -52,10 +52,9 @@ export function initInstructionsPage({ goTo }) {
         </hand-component>
       </main>
     `;
-      this.addListeners();
-      this.shadow.appendChild(style);
-    }
+    this.addListeners();
+    this.shadow.appendChild(style);
   }
-
-  customElements.define("instructions-page", InstructionsPage);
 }
+
+customElements.define("instructions-page", InstructionsPage);

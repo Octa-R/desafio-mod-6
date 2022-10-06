@@ -1,42 +1,40 @@
+import { Router } from "@vaadin/router";
 import { state } from "../../state";
 import { Play } from "../../types/play";
 
 const imageURL = require("url:../../img/fondo.png");
-export function initGamePage({ goTo }) {
-  class GamePage extends HTMLElement {
-    shadow: ShadowRoot;
-    constructor() {
-      super();
-      this.shadow = this.attachShadow({ mode: "open" });
-    }
+class GamePage extends HTMLElement {
+  shadow: ShadowRoot;
+  constructor() {
+    super();
+    this.shadow = this.attachShadow({ mode: "open" });
+  }
 
-    connectedCallback() {
-      this.render();
-    }
+  connectedCallback() {
+    this.render();
+  }
 
-    addListeners() {
-      const handList = this.shadow.querySelectorAll("hand-component");
-      handList.forEach((item) => {
-        item.addEventListener("player-move", (e) => {
-          const { detail } = e as any;
-          const playerMove: Play = detail.move;
-          state.move(playerMove);
-        });
+  addListeners() {
+    const handList = this.shadow.querySelectorAll("hand-component");
+    handList.forEach((item) => {
+      item.addEventListener("player-move", (e) => {
+        const { detail } = e as any;
+        const playerMove: Play = detail.move;
+        state.move(playerMove);
       });
-      const counter = <HTMLElement>(
-        this.shadow.querySelector("counter-component")
-      );
-      counter.addEventListener("finished", (e) => {
-        const evt = e as any;
-        this.showHandsAnimation();
-      });
-    }
+    });
+    const counter = <HTMLElement>this.shadow.querySelector("counter-component");
+    counter.addEventListener("finished", (e) => {
+      const evt = e as any;
+      this.showHandsAnimation();
+    });
+  }
 
-    showHandsAnimation() {
-      const main = <HTMLElement>this.shadow.querySelector(".main");
-      main.innerHTML = "";
-      const lastState = state.getState() as any;
-      main.innerHTML = `
+  showHandsAnimation() {
+    const main = <HTMLElement>this.shadow.querySelector(".main");
+    main.innerHTML = "";
+    const lastState = state.getState() as any;
+    main.innerHTML = `
       <hand-component 
         size="lg"
         position="up" 
@@ -50,14 +48,14 @@ export function initGamePage({ goTo }) {
       </hand-component>
       `;
 
-      setTimeout(() => {
-        goTo("/game-over");
-      }, 2000);
-    }
+    setTimeout(() => {
+      Router.go("/game-over");
+    }, 2000);
+  }
 
-    render() {
-      const style = document.createElement("style");
-      style.innerHTML = `
+  render() {
+    const style = document.createElement("style");
+    style.innerHTML = `
         .main {
           box-sizing:border-box;
           height:100vh;
@@ -82,7 +80,7 @@ export function initGamePage({ goTo }) {
         .bottom-hand {}
       `;
 
-      this.shadow.innerHTML = `
+    this.shadow.innerHTML = `
         <main class="main">
           <counter-component count="3"></counter-component>
           <div class="hands-container">
@@ -92,12 +90,9 @@ export function initGamePage({ goTo }) {
           </div>
         </main>
       `;
-      this.addListeners();
-      this.shadow.appendChild(style);
-    }
+    this.addListeners();
+    this.shadow.appendChild(style);
   }
-
-  customElements.define("game-page", GamePage);
-  const page = document.createElement("game-page");
-  return page;
 }
+
+customElements.define("game-page", GamePage);

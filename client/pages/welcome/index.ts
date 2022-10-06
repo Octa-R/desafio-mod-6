@@ -1,25 +1,25 @@
 const imageURL = require("url:../../img/fondo.png");
-export function initWelcomePage({ goTo }) {
-  class WelcomePage extends HTMLElement {
-    shadow: ShadowRoot;
-    constructor() {
-      super();
-      this.shadow = this.attachShadow({ mode: "open" });
-    }
+import { Router } from "@vaadin/router";
+class WelcomePage extends HTMLElement {
+  shadow: ShadowRoot;
+  constructor() {
+    super();
+    this.shadow = this.attachShadow({ mode: "open" });
+  }
 
-    connectedCallback() {
-      this.render();
-    }
+  connectedCallback() {
+    this.render();
+  }
 
-    addListeners() {
-      const btn = this.shadow.querySelector("btn-component");
-      btn?.addEventListener("click", (evt) => {
-        goTo("/instructions");
-      });
-    }
+  addListeners() {
+    const btn = this.shadow.querySelector("btn-component");
+    btn?.addEventListener("click", (evt) => {
+      Router.go("/instructions");
+    });
+  }
 
-    render() {
-      this.shadow.innerHTML = `
+  render() {
+    this.shadow.innerHTML = `
         <main class="main">
           <text-component type="title" text="Piedra Papel o Tijera"></text-component>
           <btn-component text="Empezar"></btn-component>
@@ -30,8 +30,8 @@ export function initWelcomePage({ goTo }) {
           </div>
         </main>
       `;
-      const style = document.createElement("style");
-      style.innerHTML = `
+    const style = document.createElement("style");
+    style.innerHTML = `
         .main {
           box-sizing:border-box;
           height:100vh;
@@ -48,10 +48,9 @@ export function initWelcomePage({ goTo }) {
           width:100%;
         }
       `;
-      this.addListeners();
-      this.shadow.appendChild(style);
-    }
+    this.addListeners();
+    this.shadow.appendChild(style);
   }
-
-  customElements.define("welcome-page", WelcomePage);
 }
+
+customElements.define("welcome-page", WelcomePage);

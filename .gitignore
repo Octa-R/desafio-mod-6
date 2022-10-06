@@ -2,4 +2,6 @@ node_modules
 public
 .parcel-cache
 .env
+dist
 key.json
+*.js

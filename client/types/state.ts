@@ -1,14 +1,9 @@
 import { Storage } from "./storage";
 import { Play } from "./play";
 export interface State {
-  data: {
-    game: {
-      computer: Play[];
-      player: Play[];
-      results: number[];
-    };
-  };
+  data: any;
   listeners: ((arg0: any) => any)[];
+  storageKey: string;
   storage: Storage;
 
   init();
@@ -18,10 +13,10 @@ export interface State {
   subscribe: (arg0: (data: {}) => any) => any;
 
   move: (move: Play) => any;
-  matchResult(result: number[]);
   whoWins(computer: Play, player: Play);
-  getComputerScore(): number;
+  // getComputerScore(): number;
   getPlayerScore(): number;
+  getComputerScore(): number;
   getComputerMove(): Play;
   resetResults();
   getLastResult(): number;
