@@ -1,0 +1,16 @@
+.main {
+  box-sizing: border-box;
+  height: 100vh;
+  background-color: #eee;
+  /* background-image: url("${imageURL}"); */
+  padding: 100px 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 30px;
+}
+.hands-container {
+  height: 50px;
+  width: 100%;
+}

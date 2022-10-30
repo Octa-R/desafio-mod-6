@@ -5,6 +5,7 @@ export interface State {
   listeners: ((arg0: any) => any)[];
   storageKey: string;
   storage: Storage;
+  apiUrl: string
 
   init();
 
@@ -20,4 +21,10 @@ export interface State {
   getComputerMove(): Play;
   resetResults();
   getLastResult(): number;
+
+  createNewGame(data: { name: string })
+  joinNewGame(data: { name: string, code: string });
+  makeMoveToGame(move)
+  startGame()
+  getUserName(): string;
 }

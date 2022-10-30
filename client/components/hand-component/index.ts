@@ -40,7 +40,7 @@ class HandComponent extends HTMLElement {
         },
       });
       this.dispatchEvent(event);
-      handEl.classList.add("selected");
+      handEl.classList.toggle("selected");
     });
   }
   render() {
@@ -114,9 +114,8 @@ class HandComponent extends HTMLElement {
     `;
     this.shadow.innerHTML = `
       <img 
-        class="img ${this.type} ${this.size} ${this.position} ${
-      this.showing ? "centered" : ""
-    }"
+        class="img ${this.type} ${this.size} ${this.position} ${this.showing ? "centered" : ""
+      }"
         src="${this.imgUrl}"
       >
     `;

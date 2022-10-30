@@ -24,8 +24,7 @@ class GamePage extends HTMLElement {
       });
     });
     const counter = <HTMLElement>this.shadow.querySelector("counter-component");
-    counter.addEventListener("finished", (e) => {
-      const evt = e as any;
+    counter.addEventListener("finished", () => {
       this.showHandsAnimation();
     });
   }

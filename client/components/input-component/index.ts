@@ -1,17 +1,20 @@
-class ButtonComponent extends HTMLElement {
+class InputComponent extends HTMLElement {
   shadow: ShadowRoot;
-  text: string;
+  placeholder: string;
   listener: () => any;
   constructor() {
     super();
 
     this.shadow = this.attachShadow({ mode: "open" });
-    this.text = this.getAttribute("text") || "";
+    this.placeholder = this.getAttribute("placeholder") || "";
   }
   connectedCallback() {
     this.render();
   }
-
+  getValue() {
+    const el: HTMLInputElement = <HTMLInputElement>this.shadow.querySelector(".input")
+    return el.value;
+  }
   render() {
     const style = document.createElement("style");
     style.innerHTML = `
@@ -21,28 +24,26 @@ class ButtonComponent extends HTMLElement {
         align-items:center;
         justify-content-center;
       }
-      
-      .button {
+      .input {
         font-family:'Odibee Sans', cursive;
         height:84px;
         width:368px;
-        background-color: var(--azul-claro);
+        background-color: #eee;
         border: 10px solid var(--azul-oscuro);
         border-radius: 10px;
-        color: #eee;
+        color:black;
         font-size: 45px;
         margin:0 auto;
       }
+
     `;
     this.shadow.innerHTML = `
-    <div class="container">
-      <button class="button" >
-        ${this.text}
-      </button>
+      <div class="container">
+        <input class="input" type="text"  placeholder="${this.placeholder}">
       </div>
     `;
     this.shadow.appendChild(style);
   }
 }
 
-customElements.define("btn-component", ButtonComponent);
+customElements.define("input-component", InputComponent);

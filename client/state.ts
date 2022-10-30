@@ -12,11 +12,16 @@ export const state: State = {
     },
     roomId: "",
     rtdbRoomId: "",
+    userId: "",
+    userName: "",
+    opponentName: "",
   },
+  apiUrl: "",
   storageKey: "game-state",
   listeners: [],
   storage: new Storage(),
   init() {
+    this.apiUrl = process.env.API_URL_BASE || "http://localhost:3000"
     Router.go(location.pathname);
     const { data } = this.storage.get(this.storageKey);
     const newState = { ...this.data.game, ...data };
@@ -98,4 +103,37 @@ export const state: State = {
       results: [],
     });
   },
+  async joinNewGame(data) {
+    if (data.name === "" || data.code === "") {
+      console.error("faltan datos para unirse a la partida")
+      return
+    }
+    const res = await fetch(`${this.apiUrl}/${data.code}?userName=${data.name}`, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+      }
+    })
+
+  },
+  async createNewGame(data) {
+    const res = await fetch(`${this.apiUrl}/?userName=${data.name}`, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+      }
+    })
+    const { rtdbRoomId, userId, roomId } = await res.json()
+    const cs = this.getState()
+    cs.rtdbRoomId = rtdbRoomId
+    cs.userId = userId
+    cs.roomId = roomId
+    cs.userName = data.name
+    this.setState(cs)
+  },
+  makeMoveToGame(move) { },
+  startGame() { },
+  getUserName() {
+    return this.data.userName;
+  }
 };
