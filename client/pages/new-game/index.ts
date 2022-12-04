@@ -1,41 +1,32 @@
-import { Router } from "@vaadin/router";
 import { state } from "../../state";
+import { Router } from "@vaadin/router";
 const imageURL = require("url:../../img/fondo.png");
-class GameCodePage extends HTMLElement {
+class NewGamePage extends HTMLElement {
   shadow: ShadowRoot;
   roomId: string;
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
     this.roomId = state.getRoomId()
-    const unsubscribe = state.subscribe(() => {
-      if (state.isOpponentOnline()) {
-        console.log("se actualizo el estado con el oponent conectado")
-        unsubscribe()
-        console.log("se ejecuto unsubscribe")
-
-      }
-    })
-
-
   }
+
   connectedCallback() {
     this.render();
   }
 
   addListeners() {
-    const btn = this.shadow.querySelector(".copy-btn");
-    const copyContent = async () => {
-      try {
-        await navigator.clipboard.writeText(this.roomId);
-        console.log('Content copied to clipboard');
-      } catch (err) {
-        console.error('Failed to copy: ', err);
-      }
-    }
-    btn?.addEventListener("click", (evt) => {
-      copyContent()
-    });
+    const startBtn = this.shadow.querySelector(".start-btn")
+    startBtn?.addEventListener("click", () => {
+      const nameInput = this.shadow.querySelector(".name-input") as any
+      const cs = state.getState()
+      cs.userName = nameInput.getValue();
+      state.setState(cs);
+
+      state.createNewGame()
+        .then(() => {
+          Router.go("/game-code");
+        })
+    })
   }
 
   render() {
@@ -69,18 +60,13 @@ class GameCodePage extends HTMLElement {
           gap:10px;
         }
       `;
-    const text = `Compartí el código con tu contrincante: ${this.roomId}`;
-
     this.shadow.innerHTML = `
       <div class="container">
         <header class="header">
         </header>
         <main class="main">
-          <text-component 
-            type="p" 
-            text="${text}">
-          </text-component>
-          <btn-component class="copy-btn" text="Copiar código!"></btn-component>
+          <input-component class="name-input" placeholder="nombre"></input-component>
+          <btn-component class="start-btn" text="Empezar juego!"></btn-component>
         </main>
       </div>
     `;
@@ -89,4 +75,4 @@ class GameCodePage extends HTMLElement {
   }
 }
 
-customElements.define("game-code", GameCodePage);
+customElements.define("new-game", NewGamePage);

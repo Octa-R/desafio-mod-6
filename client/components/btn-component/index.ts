@@ -4,7 +4,6 @@ class ButtonComponent extends HTMLElement {
   listener: () => any;
   constructor() {
     super();
-
     this.shadow = this.attachShadow({ mode: "open" });
     this.text = this.getAttribute("text") || "";
   }

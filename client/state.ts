@@ -1,20 +1,23 @@
 import { Storage } from "./types/storage";
+import { ref, onValue, off } from "firebase/database";
+import { rtdb } from "./rtdb";
 import { State } from "./types/state";
 import { Play } from "./types/play";
 import { Router } from "@vaadin/router";
+import { GameData } from "./types/gameData";
 const moveList: Play[] = ["tijeras", "papel", "piedra"];
 export const state: State = {
   data: {
-    game: {
-      player: [],
-      computer: [],
-      results: [],
-    },
     roomId: "",
     rtdbRoomId: "",
+    results: [],
     userId: "",
     userName: "",
+    playerScore: [],
     opponentName: "",
+    opponentScore: [],
+    opponentIsOnline: false,
+    opponentPressedStart: false
   },
   apiUrl: "",
   storageKey: "game-state",
@@ -27,7 +30,7 @@ export const state: State = {
     const newState = { ...this.data.game, ...data };
     this.setState(newState);
   },
-  setState(data) {
+  setState(data: GameData) {
     this.data = data;
     this.storage.save(this.storageKey, data);
     for (const cb of this.listeners) {
@@ -40,6 +43,9 @@ export const state: State = {
   },
   subscribe(callback) {
     this.listeners.push(callback);
+    return () => {
+      this.listeners = this.listeners.filter(e => e != callback)
+    }
   },
   move(playerPlay: Play) {
     //la jugada del jugador
@@ -103,37 +109,90 @@ export const state: State = {
       results: [],
     });
   },
-  async joinNewGame(data) {
-    if (data.name === "" || data.code === "") {
+  async joinGame(data) {
+    if (!data.name || !data.code) {
       console.error("faltan datos para unirse a la partida")
       return
     }
+    console.log("data que viene en joingame", data)
     const res = await fetch(`${this.apiUrl}/${data.code}?userName=${data.name}`, {
       method: "post",
       headers: {
         "Content-Type": "application/json",
       }
     })
-
+    const json = await res.json()
+    if (json.ok != true) {
+      console.error(json.message)
+      return
+    }
+    const cs = this.getState()
+    cs.roomId = data.code;
+    cs.userName = data.name
+    cs.rtdbRoomId = json.rtdbRoomId;
+    cs.opponentName = json.opponentName;
+    this.setState(cs)
   },
-  async createNewGame(data) {
-    const res = await fetch(`${this.apiUrl}/?userName=${data.name}`, {
+  listenRoom() {
+    const cs = this.getState();
+    const gameData = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}`);
+    onValue(gameData, snapShot => {
+      const data = snapShot.val()
+      console.log(data)
+    })
+  },
+  async createNewGame() {
+    const cs = this.getState()
+    const res = await fetch(`${this.apiUrl}/?userName=${cs.userName}`, {
       method: "post",
       headers: {
         "Content-Type": "application/json",
       }
     })
     const { rtdbRoomId, userId, roomId } = await res.json()
-    const cs = this.getState()
+
     cs.rtdbRoomId = rtdbRoomId
     cs.userId = userId
     cs.roomId = roomId
-    cs.userName = data.name
     this.setState(cs)
+
+    const gameData = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}`);
+    const unsubscribe = onValue(gameData, (snapShot) => {
+      const data = snapShot.val()
+      console.log("dentro de createNewGame", data)
+      // console.log(Object.keys(data))
+      const cs: GameData = this.getState()
+
+      if (Object.entries(data).length === 2) {
+        for (const key in data) {
+          if (key !== cs.userName) {
+            console.log(key)
+            cs.opponentName = key;
+            cs.opponentIsOnline = true;
+            cs.opponentPressedStart = false;
+            this.setState(cs)
+            console.log("se conecto el jugador " + this.data.opponentName)
+            unsubscribe()
+          }
+        }
+      }
+    })
   },
   makeMoveToGame(move) { },
-  startGame() { },
+  start() {
+
+  },
   getUserName() {
     return this.data.userName;
+  },
+  getRoomId() {
+    return this.data.roomId;
+  },
+  isOpponentOnline() {
+    const cs = this.getState()
+    if (cs.opponentIsOnline) {
+      return true
+    }
+    return false;
   }
 };

@@ -8,6 +8,7 @@ import "./components/star-component";
 import "./components/input-component"
 import "./pages/welcome";
 import "./pages/game";
+import "./pages/new-game";
 import "./pages/game-over";
 import "./pages/instructions";
 import "./pages/join-game"

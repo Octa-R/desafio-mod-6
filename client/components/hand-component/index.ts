@@ -40,7 +40,9 @@ class HandComponent extends HTMLElement {
         },
       });
       this.dispatchEvent(event);
-      handEl.classList.toggle("selected");
+      if (this.size === "md") {
+        handEl.classList.toggle("selected");
+      }
     });
   }
   render() {
@@ -69,6 +71,7 @@ class HandComponent extends HTMLElement {
       .lg.papel {
         width:160px;
       }
+
       .selected {
         filter: drop-shadow(0 0 0.75rem crimson);
       }
@@ -78,17 +81,15 @@ class HandComponent extends HTMLElement {
         bottom:-30px;
         cursor:pointer;
       }
-      .img:hover {
-        filter: drop-shadow(0 0 0.75rem crimson);
-      }
+
       .piedra{
         left: 50%;
-        transform: translate(-50%, 0);
+        transform: translateX(-50%);
       }
 
       .papel{
         left: 50%;
-        transform: translate(50%, 0);
+        transform: translateX(50%);
       }
       
       .tijeras {
@@ -100,16 +101,17 @@ class HandComponent extends HTMLElement {
         top:0;
         transform: translate(-50%, 0) rotate(0.5turn);
       }
+
       .bottom {
         right:0;
         bottom:0;
         left: 50%;
-        transform: translate(-50%, 0);
+        transform: translateX(-50%);
       }
 
       .centered {
         left: 50%;
-        transform: translate(-50%, 0);
+        transform: translateX(-50%);
       }
     `;
     this.shadow.innerHTML = `

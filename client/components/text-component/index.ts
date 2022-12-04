@@ -2,11 +2,14 @@ class TextComponent extends HTMLElement {
   shadow: ShadowRoot;
   type: string;
   text: string;
+  sizesList: ['s', 'm', 'l']
+  size: string;
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
     this.type = this.getAttribute("type") || "p";
     this.text = this.getAttribute("text") || "no hay texto";
+    this.size = this.getAttribute("size") || "m";
   }
   connectedCallback() {
     this.render();
@@ -27,15 +30,17 @@ class TextComponent extends HTMLElement {
         font-size:80px;
         font-weight: 700;
       }
-
       .p {
         font-size:40px;
         font-weight: 600;
         color:var(--negro);
       }
+      .s {
+        font-size:24px;
+      }
     `;
     this.shadow.innerHTML = `
-      <h2 class="text ${this.type}">
+      <h2 class="text ${this.type} ${this.size}">
         ${this.text}
       </h2>
     `;

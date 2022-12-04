@@ -1,6 +1,5 @@
 const imageURL = require("url:../../img/fondo.png");
 import { Router } from "@vaadin/router";
-import { state } from "../../state";
 class WelcomePage extends HTMLElement {
   shadow: ShadowRoot;
   constructor() {
@@ -15,10 +14,7 @@ class WelcomePage extends HTMLElement {
   addListeners() {
     const newGameBtn = this.shadow.querySelector(".new-game-btn");
     newGameBtn?.addEventListener("click", (evt) => {
-      state.createNewGame({ name: state.getUserName() })
-        .then(() => {
-          Router.go("/game-code");
-        })
+      Router.go("/new-game");
     });
     const joinGameBtn = this.shadow.querySelector(".join-game-btn");
     joinGameBtn?.addEventListener("click", (evt) => {

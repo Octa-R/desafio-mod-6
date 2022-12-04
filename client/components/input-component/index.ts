@@ -4,7 +4,6 @@ class InputComponent extends HTMLElement {
   listener: () => any;
   constructor() {
     super();
-
     this.shadow = this.attachShadow({ mode: "open" });
     this.placeholder = this.getAttribute("placeholder") || "";
   }

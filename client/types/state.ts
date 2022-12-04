@@ -1,7 +1,8 @@
 import { Storage } from "./storage";
 import { Play } from "./play";
+import { GameData } from "./gameData";
 export interface State {
-  data: any;
+  data: GameData
   listeners: ((arg0: any) => any)[];
   storageKey: string;
   storage: Storage;
@@ -9,8 +10,8 @@ export interface State {
 
   init();
 
-  setState: (state: { data: {} }) => void;
-  getState: () => { data: {} };
+  setState: (data: GameData) => void;
+  getState: () => GameData;
   subscribe: (arg0: (data: {}) => any) => any;
 
   move: (move: Play) => any;
@@ -22,9 +23,12 @@ export interface State {
   resetResults();
   getLastResult(): number;
 
-  createNewGame(data: { name: string })
-  joinNewGame(data: { name: string, code: string });
+  createNewGame()
+  joinGame(data: { name: string, code: string });
   makeMoveToGame(move)
-  startGame()
+  start()
   getUserName(): string;
+  getRoomId(): string;
+  listenRoom()
+  isOpponentOnline(): boolean;
 }
