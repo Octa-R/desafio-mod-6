@@ -1,5 +1,5 @@
 import { Storage } from "./types/storage";
-import { ref, onValue, off } from "firebase/database";
+import { ref, onValue, get, set, child } from "firebase/database";
 import { rtdb } from "./rtdb";
 import { State } from "./types/state";
 import { Play } from "./types/play";
@@ -14,6 +14,7 @@ export const state: State = {
     userId: "",
     userName: "",
     playerScore: [],
+    playerPressedStart: false,
     opponentName: "",
     opponentScore: [],
     opponentIsOnline: false,
@@ -43,6 +44,7 @@ export const state: State = {
   },
   subscribe(callback) {
     this.listeners.push(callback);
+    //devuelve una funcion que si la ejecutamos hace unsubscribe
     return () => {
       this.listeners = this.listeners.filter(e => e != callback)
     }
@@ -114,13 +116,13 @@ export const state: State = {
       console.error("faltan datos para unirse a la partida")
       return
     }
-    console.log("data que viene en joingame", data)
     const res = await fetch(`${this.apiUrl}/${data.code}?userName=${data.name}`, {
       method: "post",
       headers: {
         "Content-Type": "application/json",
       }
     })
+
     const json = await res.json()
     if (json.ok != true) {
       console.error(json.message)
@@ -131,15 +133,8 @@ export const state: State = {
     cs.userName = data.name
     cs.rtdbRoomId = json.rtdbRoomId;
     cs.opponentName = json.opponentName;
+    cs.opponentIsOnline = true;//asumo que esta online por simplicidad
     this.setState(cs)
-  },
-  listenRoom() {
-    const cs = this.getState();
-    const gameData = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}`);
-    onValue(gameData, snapShot => {
-      const data = snapShot.val()
-      console.log(data)
-    })
   },
   async createNewGame() {
     const cs = this.getState()
@@ -159,19 +154,15 @@ export const state: State = {
     const gameData = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}`);
     const unsubscribe = onValue(gameData, (snapShot) => {
       const data = snapShot.val()
-      console.log("dentro de createNewGame", data)
-      // console.log(Object.keys(data))
       const cs: GameData = this.getState()
 
       if (Object.entries(data).length === 2) {
         for (const key in data) {
           if (key !== cs.userName) {
-            console.log(key)
             cs.opponentName = key;
             cs.opponentIsOnline = true;
             cs.opponentPressedStart = false;
             this.setState(cs)
-            console.log("se conecto el jugador " + this.data.opponentName)
             unsubscribe()
           }
         }
@@ -179,9 +170,6 @@ export const state: State = {
     })
   },
   makeMoveToGame(move) { },
-  start() {
-
-  },
   getUserName() {
     return this.data.userName;
   },
@@ -194,5 +182,56 @@ export const state: State = {
       return true
     }
     return false;
+  },
+  opponentPressedStart() {
+    const cs = this.getState()
+    if (cs.opponentPressedStart) {
+      return true
+    }
+    return false;
+  },
+  async startGame() {
+    const cs: GameData = this.getState()
+
+    const body = { userName: cs.userName, rtdbRoomId: cs.rtdbRoomId }
+    const res = await fetch(`${this.apiUrl}/${cs.roomId}`, {
+      method: "PATCH",
+      mode: 'cors',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    })
+    const json = await res.json()
+
+    if (!json.ok) {
+      console.error(json.message)
+      return
+    }
+    cs.playerPressedStart = true;
+    this.setState(cs)
+
+    const opponentPressedStart = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/start`);
+    const snapshot = await get(opponentPressedStart)
+    if (snapshot.exists()) {
+      const start = snapshot.val()
+      if (start == true) {
+        const cs: GameData = this.getState()
+        console.log("en el get", cs)
+        cs.opponentPressedStart = true;
+        this.setState(cs)
+        return
+      }
+    }
+
+    onValue(opponentPressedStart, (snapshot) => {
+      const data = snapshot.val();
+      if (data == true) {
+        const cs: GameData = this.getState()
+        console.log("en on value", cs)
+        cs.opponentPressedStart = true;
+        this.setState(cs)
+      }
+    })
   }
 };

@@ -6,6 +6,7 @@ export interface GameData {
   userId: string;
   userName: string;
   playerScore: [];
+  playerPressedStart: boolean;
   opponentName: string;
   opponentScore: [];
   opponentIsOnline: boolean;

@@ -1,10 +1,19 @@
 import { Router } from "@vaadin/router";
+import { state } from "../../state";
 const imageURL = require("url:../../img/fondo.png");
 class InstructionsPage extends HTMLElement {
   shadow: ShadowRoot;
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
+    const unsubscribeWaitingForStart = state.subscribe(() => {
+      const cs = state.getState()
+      if (cs.opponentPressedStart && cs.playerPressedStart) {
+        unsubscribeWaitingForStart()
+        console.log("ambos presionaron start redirigiendo a /game")
+        // Router.go("/game")
+      }
+    })
   }
   connectedCallback() {
     this.render();
@@ -13,7 +22,7 @@ class InstructionsPage extends HTMLElement {
   addListeners() {
     const btn = this.shadow.querySelector("btn-component");
     btn?.addEventListener("click", (evt) => {
-      Router.go("/game");
+      state.startGame()
     });
   }
 

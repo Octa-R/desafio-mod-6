@@ -8,16 +8,12 @@ class GameCodePage extends HTMLElement {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
     this.roomId = state.getRoomId()
-    const unsubscribe = state.subscribe(() => {
+    const unsubscribeWaitingForOpponent = state.subscribe(() => {
       if (state.isOpponentOnline()) {
-        console.log("se actualizo el estado con el oponent conectado")
-        unsubscribe()
-        console.log("se ejecuto unsubscribe")
-
+        unsubscribeWaitingForOpponent()
+        Router.go("/instructions")
       }
     })
-
-
   }
   connectedCallback() {
     this.render();
@@ -61,7 +57,6 @@ class GameCodePage extends HTMLElement {
 
         .main {
           grid-area:main;
-
           display:flex;
           flex-direction:column;
           align-items:center;

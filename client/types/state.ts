@@ -26,9 +26,9 @@ export interface State {
   createNewGame()
   joinGame(data: { name: string, code: string });
   makeMoveToGame(move)
-  start()
   getUserName(): string;
   getRoomId(): string;
-  listenRoom()
   isOpponentOnline(): boolean;
+  opponentPressedStart(): boolean;
+  startGame(): void
 }
