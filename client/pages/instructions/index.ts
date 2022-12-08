@@ -8,10 +8,11 @@ class InstructionsPage extends HTMLElement {
     this.shadow = this.attachShadow({ mode: "open" });
     const unsubscribeWaitingForStart = state.subscribe(() => {
       const cs = state.getState()
+
       if (cs.opponentPressedStart && cs.playerPressedStart) {
         unsubscribeWaitingForStart()
         console.log("ambos presionaron start redirigiendo a /game")
-        // Router.go("/game")
+        Router.go("/game")
       }
     })
   }
@@ -21,9 +22,14 @@ class InstructionsPage extends HTMLElement {
 
   addListeners() {
     const btn = this.shadow.querySelector("btn-component");
-    btn?.addEventListener("click", (evt) => {
+
+    const startGame = (evt) => {
+      //se remueve el listener asi no se hacen consultas de mas a la api
+      btn?.removeEventListener("click", startGame, true);
       state.startGame()
-    });
+    }
+
+    btn?.addEventListener("click", startGame, true);
   }
 
   render() {

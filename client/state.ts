@@ -6,7 +6,7 @@ import { Play } from "./types/play";
 import { Router } from "@vaadin/router";
 import { GameData } from "./types/gameData";
 const moveList: Play[] = ["tijeras", "papel", "piedra"];
-export const state: State = {
+export const state = {
   data: {
     roomId: "",
     rtdbRoomId: "",
@@ -15,10 +15,12 @@ export const state: State = {
     userName: "",
     playerScore: [],
     playerPressedStart: false,
+    playerChoice: "",
     opponentName: "",
     opponentScore: [],
     opponentIsOnline: false,
-    opponentPressedStart: false
+    opponentPressedStart: false,
+    opponentChoice: "",
   },
   apiUrl: "",
   storageKey: "game-state",
@@ -49,16 +51,26 @@ export const state: State = {
       this.listeners = this.listeners.filter(e => e != callback)
     }
   },
-  move(playerPlay: Play) {
-    //la jugada del jugador
-    const game = this.getState();
-    game.player.push(playerPlay);
-    //jugada de la maquina
-    const computerPlay: Play = this.getComputerMove();
-    game.computer.push(computerPlay);
-    const result = this.whoWins(computerPlay, playerPlay);
-    game.results.push(result);
-    this.setState(game);
+  async move(playerPlay: Play) {
+    const cs = this.getState();
+    const body = {
+      rtdbRoomId: cs.rtdbRoomId,
+      roomId: cs.roomId,
+      userId: cs.userId,
+      userName: cs.userName,
+      move: playerPlay,
+    }
+
+    const res = await fetch(`${this.apiUrl}/${cs.roomId}/move`, {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json();
+    console.log(data)
   },
   getComputerMove() {
     const randNumber: number = Math.floor(Math.random() * 3);
@@ -131,6 +143,7 @@ export const state: State = {
     const cs = this.getState()
     cs.roomId = data.code;
     cs.userName = data.name
+    cs.userId = json.userId;
     cs.rtdbRoomId = json.rtdbRoomId;
     cs.opponentName = json.opponentName;
     cs.opponentIsOnline = true;//asumo que esta online por simplicidad

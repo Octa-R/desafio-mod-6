@@ -47,7 +47,8 @@ rooms.post("/", (req, res) => {
   const gameState = {
     [userName]: {
       online: true,
-      start: false
+      start: false,
+      played: false
     }
   }
   const gameStateRef = rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}`)
@@ -87,7 +88,8 @@ rooms.post("/:roomId", async (req, res) => {
   };
   const playerTwoGameState = {
     online: true,
-    start: false
+    start: false,
+    played: false
   }
   const data = roomDoc.data();
   const { rtdbRoomId } = data;
@@ -101,23 +103,19 @@ rooms.post("/:roomId", async (req, res) => {
   } catch (e) {
     console.log(e)
   }
-
-
-  // TODO falta agregar al jugador 2 a la db
-  //  //join firebase room
-  //   const firebaseRoom = {
-  //     player2:{
-  //       name:userName,
-  //       id:userId
-  //     }
-  //   }
-  //   const createFirebaseRoom = roomsCollection
-  //     .doc(roomId).
-
-  //     .push(firebaseRoom);
+  //add player 2 to firestore
+  roomsCollection
+    .doc(roomId)
+    .update({
+      player2: {
+        name: userName,
+        id: userId
+      }
+    });
 
   res.json({
     ok: true,
+    userId: userId,
     rtdbRoomId: data.rtdbRoomId,
     opponentName: data.player1.name,
     roomId: roomId,
@@ -126,11 +124,9 @@ rooms.post("/:roomId", async (req, res) => {
 });
 
 rooms.patch("/:roomId", async (req, res) => {
-  console.log("se eecuto patch")
   const { userName, rtdbRoomId } = req.body;
   const { roomId } = req.params;
-  console.log(req.body)
-  console.log(roomId)
+
   const roomDoc = await roomsCollection.doc(roomId.toString()).get();
   // TODO falta chequear que el jugador exista
   if (roomDoc.exists) {
@@ -142,7 +138,7 @@ rooms.patch("/:roomId", async (req, res) => {
       .json({ ok: false, message: "no existe la room" });
   }
 });
-
+// cuando se presiona el boton jugar en /instructions
 rooms.post("/:roomId/play", async (req, res) => {
   const { userId, move, rtdbRoomId, userName } = req.body;
   const { roomId } = req.params;
@@ -170,16 +166,36 @@ rooms.post("/:roomId/play", async (req, res) => {
     res.json({ ok: false });
   }
 });
+// make a move to the room game 
+rooms.post("/:roomId/move", async (req, res) => {
+  console.log("entro a move");
+  console.log(req.body)
+  console.log(req.params)
 
-rooms.post("/:roomId/start", (req, res) => {
   const { userId, move, rtdbRoomId, userName } = req.body;
   const { roomId } = req.params;
-  if (!userId || !move || !rtdbRoomId || !roomId) {
+  console.log(userId, move, rtdbRoomId, roomId, userName)
+  if (!userId || !move || !rtdbRoomId || !roomId || !userName) {
     res
       .status(400)
-      .json({ ok: false, message: "faltan datos" });
+      .json({ ok: false, message: "faltan datos para jugar" });
+    return;
+  }
+  const roomDoc = await roomsCollection.doc(roomId.toString()).get();
+  if (roomDoc.exists) {
+    const updates = {};
+    updates[`/rooms/${rtdbRoomId}/${userId}/choice`] = move;
+    updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/start`] = false;
+    updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/played`] = true;
+    try {
+      await rtdb.ref().update(updates);
+      res.json({ ok: true });
+    } catch (error) {
+      res.status(400).json({ ok: false, error: error })
+    }
   }
 })
+
 
 app.listen(port, () => {
   console.log(`app en  http://localhost:${port}`);

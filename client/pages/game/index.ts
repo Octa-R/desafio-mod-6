@@ -25,31 +25,36 @@ class GamePage extends HTMLElement {
     });
     const counter = <HTMLElement>this.shadow.querySelector("counter-component");
     counter.addEventListener("finished", () => {
-      this.showHandsAnimation();
+      const cs = state.getState();
+      if (cs.playerChoice && cs.opponentChoice) {
+        this.showHandsAnimation();
+      } else {
+        Router.go("/instructions");
+      }
     });
   }
 
   showHandsAnimation() {
     const main = <HTMLElement>this.shadow.querySelector(".main");
     main.innerHTML = "";
-    const lastState = state.getState() as any;
+    const cs = state.getState();
     main.innerHTML = `
       <hand-component 
         size="lg"
         position="up" 
-        type="${lastState.computer.at(-1)}">
+        type="${cs.playerChoice}">
       </hand-component>
       <hand-component 
         size="lg"
         showing="true"
         position="bottom"
-        type="${lastState.player.at(-1)}">
+        type="${cs.opponentChoice}">
       </hand-component>
       `;
 
-    setTimeout(() => {
-      Router.go("/game-over");
-    }, 2000);
+    // setTimeout(() => {
+    //   Router.go("/game-over");
+    // }, 2000);
   }
 
   render() {
@@ -72,11 +77,6 @@ class GamePage extends HTMLElement {
           width:50px;
         }
 
-        .top-hand {
-
-        }
-
-        .bottom-hand {}
       `;
 
     this.shadow.innerHTML = `
