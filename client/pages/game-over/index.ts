@@ -22,14 +22,13 @@ class ResultsPage extends HTMLElement {
         window.clearInterval(i);
       }
     }, 0);
-
     this.render();
   }
 
   addListeners() {
     const btn = this.shadow.querySelector(".jugar");
     btn?.addEventListener("click", () => {
-      Router.go("/game");
+      Router.go("/instructions");
     });
 
     const resetBtn = <HTMLElement>this.shadow.querySelector(".reset-btn");
@@ -40,6 +39,7 @@ class ResultsPage extends HTMLElement {
 
   render() {
     const style = document.createElement("style");
+    const cs = state.getState();
     style.innerHTML = `
         .main {
           box-sizing:border-box;
@@ -54,25 +54,13 @@ class ResultsPage extends HTMLElement {
         }
       `;
 
-    this.playerScore = state.getPlayerScore();
-    this.computerScore = state.getComputerScore();
-    const data: any = state.getState();
-    const resultado = data.results.at(-1) || 0;
-    if (resultado > 0) {
-      this.starType = "win";
-    } else if (resultado < 0) {
-      this.starType = "lose";
-    } else {
-      this.starType = "empate";
-    }
-
     this.shadow.innerHTML = `
         <main class="main">
           <star-component type="${this.starType}">
           </star-component>
           <score-component 
-            player="${this.playerScore}"
-            computer="${this.computerScore}"
+            player="${cs.playerScore}"
+            opponent="${cs.opponentScore}"
           >
           </score-component>
           <btn-component class="jugar" text="Volver a Jugar">

@@ -25,11 +25,7 @@ class GamePage extends HTMLElement {
     });
     const counter = <HTMLElement>this.shadow.querySelector("counter-component");
     counter.addEventListener("finished", async () => {
-      console.log("termino el contador");
-
       await state.getGameResults();
-      console.log("se obtuvieron los resultados");
-
       this.endGame();
     });
   }

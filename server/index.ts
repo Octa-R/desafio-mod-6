@@ -66,20 +66,30 @@ rooms.post("/", (req, res) => {
       res.json({ ok: false });
     });
 });
-
+//unirse a la room
 rooms.post("/:roomId", async (req, res) => {
   const userName: string = req.query.userName.toString();
   const { roomId } = req.params;
+
   if (!userName || !roomId) {
     res
       .status(400)
       .json({ ok: false, message: "faltan datos para unirse a la room" });
   }
+
   const roomDoc = await roomsCollection.doc(roomId.toString()).get();
   if (!roomDoc.exists) {
     res
       .status(400)
       .json({ ok: false, message: "no existe la room" });
+    return;
+  }
+
+  const roomData = roomDoc.data();
+  const { player2 } = roomData;
+  if (player2) {
+    res.status(400).json({ ok: false, message: "la room ya esta llena" });
+    return;
   }
 
   const playerTwoState = {
@@ -98,10 +108,10 @@ rooms.post("/:roomId", async (req, res) => {
   updates[`/rooms/${rtdbRoomId}/${userId}`] = playerTwoState
   updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}`] = playerTwoGameState
   try {
-
     await rtdb.ref().update(updates)
   } catch (e) {
-    console.log(e)
+    res.status(400).json({ ok: false, message: "error al unirse a la room" });
+    return;
   }
   //add player 2 to firestore
   roomsCollection
@@ -119,16 +129,25 @@ rooms.post("/:roomId", async (req, res) => {
     rtdbRoomId: data.rtdbRoomId,
     opponentName: data.player1.name,
     roomId: roomId,
-    owner: false,
   });
 });
-
+//cuando se presiona el boton jugar en /instructions
 rooms.patch("/:roomId", async (req, res) => {
-  const { userName, rtdbRoomId } = req.body;
+  const { userName, rtdbRoomId, userId } = req.body;
   const { roomId } = req.params;
 
   const roomDoc = await roomsCollection.doc(roomId.toString()).get();
-  // TODO falta chequear que el jugador exista
+  const roomData = roomDoc.data();
+  const player = roomData.forEach((player) => {
+    if (userName === player.name && userId === player.id) {
+      return true
+    }
+  })
+  if (!player) {
+    res.status(400).json({ ok: false, message: "no eres el jugador de esta room" });
+    return;
+  }
+
   if (roomDoc.exists) {
     const roomRef = rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}/${userName}/start`);
     roomRef.set(true);
@@ -138,7 +157,7 @@ rooms.patch("/:roomId", async (req, res) => {
       .json({ ok: false, message: "no existe la room" });
   }
 });
-// cuando se presiona el boton jugar en /instructions
+// cuando se hace una jugada en /game
 rooms.post("/:roomId/play", async (req, res) => {
   const { userId, move, rtdbRoomId, userName } = req.body;
   const { roomId } = req.params;
@@ -147,8 +166,18 @@ rooms.post("/:roomId/play", async (req, res) => {
       .status(400)
       .json({ ok: false, message: "faltan datos para jugar en la room" });
   }
-  // TODO chequear que el jugador exista
   const roomDoc = await roomsCollection.doc(roomId.toString()).get();
+  //codigo repetido alert
+  const roomData = roomDoc.data();
+  const player = roomData.forEach((player) => {
+    if (userName === player.name && userId === player.id) {
+      return true
+    }
+  })
+  if (!player) {
+    res.status(400).json({ ok: false, message: "no eres el jugador de esta room" });
+    return;
+  }
   if (roomDoc.exists) {
     const updates = {};
     updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/move`] = move
@@ -161,20 +190,15 @@ rooms.post("/:roomId/play", async (req, res) => {
         .status(400)
         .json({ ok: false, error: error })
     }
-
   } else {
     res.json({ ok: false });
   }
 });
 // make a move to the room game 
 rooms.post("/:roomId/move", async (req, res) => {
-  console.log("entro a move");
-  console.log(req.body)
-  console.log(req.params)
 
   const { userId, move, rtdbRoomId, userName } = req.body;
   const { roomId } = req.params;
-  console.log(userId, move, rtdbRoomId, roomId, userName)
   if (!userId || !move || !rtdbRoomId || !roomId || !userName) {
     res
       .status(400)
@@ -182,6 +206,17 @@ rooms.post("/:roomId/move", async (req, res) => {
     return;
   }
   const roomDoc = await roomsCollection.doc(roomId.toString()).get();
+  //codigo repetido alert
+  const roomData = roomDoc.data();
+  const player = roomData.forEach((player) => {
+    if (userName === player.name && userId === player.id) {
+      return true
+    }
+  })
+  if (!player) {
+    res.status(400).json({ ok: false, message: "no eres el jugador de esta room" });
+    return;
+  }
   if (roomDoc.exists) {
     const updates = {};
     updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/start`] = false;
