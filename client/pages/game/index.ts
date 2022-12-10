@@ -24,14 +24,25 @@ class GamePage extends HTMLElement {
       });
     });
     const counter = <HTMLElement>this.shadow.querySelector("counter-component");
-    counter.addEventListener("finished", () => {
-      const cs = state.getState();
-      if (cs.playerChoice && cs.opponentChoice) {
-        this.showHandsAnimation();
-      } else {
-        Router.go("/instructions");
-      }
+    counter.addEventListener("finished", async () => {
+      console.log("termino el contador");
+
+      await state.getGameResults();
+      console.log("se obtuvieron los resultados");
+
+      this.endGame();
     });
+  }
+  endGame() {
+    const cs = state.getState();
+    console.log(`termino el juego, el oponente jugo ${cs.opponentChoice} y yo jugue ${cs.playerChoice}`)
+    if (cs.playerChoice && cs.opponentChoice) {
+      console.log("ambos jugamos, redirigiendo a /game-over");
+      Router.go("/game-over");
+      this.showHandsAnimation();
+    } else {
+      Router.go("/instructions");
+    }
   }
 
   showHandsAnimation() {
@@ -42,13 +53,13 @@ class GamePage extends HTMLElement {
       <hand-component 
         size="lg"
         position="up" 
-        type="${cs.playerChoice}">
+        type="${cs.opponentChoice}">
       </hand-component>
       <hand-component 
         size="lg"
         showing="true"
         position="bottom"
-        type="${cs.opponentChoice}">
+        type="${cs.playerChoice}">
       </hand-component>
       `;
 
@@ -76,7 +87,6 @@ class GamePage extends HTMLElement {
           height:50px;
           width:50px;
         }
-
       `;
 
     this.shadow.innerHTML = `

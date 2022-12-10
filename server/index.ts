@@ -151,7 +151,7 @@ rooms.post("/:roomId/play", async (req, res) => {
   const roomDoc = await roomsCollection.doc(roomId.toString()).get();
   if (roomDoc.exists) {
     const updates = {};
-    updates[`/rooms/${rtdbRoomId}/${userId}/choice`] = move
+    updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/move`] = move
     updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/start`] = false
     try {
       await rtdb.ref().update(updates);
@@ -184,9 +184,8 @@ rooms.post("/:roomId/move", async (req, res) => {
   const roomDoc = await roomsCollection.doc(roomId.toString()).get();
   if (roomDoc.exists) {
     const updates = {};
-    updates[`/rooms/${rtdbRoomId}/${userId}/choice`] = move;
     updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/start`] = false;
-    updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/played`] = true;
+    updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/move`] = move;
     try {
       await rtdb.ref().update(updates);
       res.json({ ok: true });

@@ -35,6 +35,8 @@ export const state = {
   },
   setState(data: GameData) {
     this.data = data;
+    console.log("set state", data);
+
     this.storage.save(this.storageKey, data);
     for (const cb of this.listeners) {
       cb(this.getState());
@@ -51,15 +53,16 @@ export const state = {
       this.listeners = this.listeners.filter(e => e != callback)
     }
   },
-  async move(playerPlay: Play) {
+  async move(playerChoice: Play) {
     const cs = this.getState();
     const body = {
       rtdbRoomId: cs.rtdbRoomId,
-      roomId: cs.roomId,
       userId: cs.userId,
       userName: cs.userName,
-      move: playerPlay,
+      move: playerChoice,
     }
+    cs.playerChoice = playerChoice;
+    this.setState(cs);
 
     const res = await fetch(`${this.apiUrl}/${cs.roomId}/move`, {
       method: "POST",
@@ -69,8 +72,7 @@ export const state = {
       },
       body: JSON.stringify(body),
     })
-    const data = await res.json();
-    console.log(data)
+    await res.json();
   },
   getComputerMove() {
     const randNumber: number = Math.floor(Math.random() * 3);
@@ -230,7 +232,6 @@ export const state = {
       const start = snapshot.val()
       if (start == true) {
         const cs: GameData = this.getState()
-        console.log("en el get", cs)
         cs.opponentPressedStart = true;
         this.setState(cs)
         return
@@ -238,13 +239,45 @@ export const state = {
     }
 
     onValue(opponentPressedStart, (snapshot) => {
-      const data = snapshot.val();
-      if (data == true) {
+      if (snapshot.exists()) {
         const cs: GameData = this.getState()
-        console.log("en on value", cs)
-        cs.opponentPressedStart = true;
+        cs.opponentPressedStart = snapshot.val();
         this.setState(cs)
       }
     })
-  }
+  },
+  async getopponentChoice() {
+    const cs = this.getState()
+    const opponentChoice = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/move`);
+    const snapshot = await get(opponentChoice)
+    if (snapshot.exists()) {
+      const move = snapshot.val()
+      if (move) {
+        return move
+      }
+    }
+    return null
+  },
+  async waitForopponentChoice() {
+    const cs = this.getState()
+    const opponentChoice = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/move`);
+    onValue(opponentChoice, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const cs = this.getState()
+        cs.opponentChoice = data;
+        this.setState(cs)
+      }
+    })
+  },
+  async getGameResults() {
+    const move = await this.getopponentChoice()
+    if (move != null) {
+      const cs = this.getState()
+      cs.opponentChoice = move;
+      this.setState(cs)
+      return
+    }
+    this.waitForopponentChoice()
+  },
 };
