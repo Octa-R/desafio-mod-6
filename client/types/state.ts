@@ -9,20 +9,13 @@ export interface State {
   apiUrl: string
 
   init();
-
   setState: (data: GameData) => void;
   getState: () => GameData;
   subscribe: (arg0: (data: {}) => any) => any;
 
-  move: (move: Play) => any;
-  whoWins(computer: Play, player: Play);
-  // getComputerScore(): number;
-  getPlayerScore(): number;
-  getComputerScore(): number;
-  getComputerMove(): Play;
   resetResults();
-  getLastResult(): number;
-
+  move: (move: Play) => any;
+  getWinner(computer: Play, player: Play);
   createNewGame()
   joinGame(data: { name: string, code: string });
   makeMoveToGame(move)

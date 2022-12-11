@@ -8,6 +8,19 @@ class GamePage extends HTMLElement {
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
+    state.subscribe(() => {
+      const cs = state.getState();
+      if (cs.playerChoice) {
+        console.log("el jugador eligio")
+      }
+      if (cs.opponentChoice && cs.playerChoice) {
+        console.log("ambos jugamos, redirigiendo a /game-over");
+      }
+      if (cs.opponentChoice) {
+        console.log("el oponente eligio")
+      }
+    });
+
   }
 
   connectedCallback() {
@@ -25,7 +38,7 @@ class GamePage extends HTMLElement {
     });
     const counter = <HTMLElement>this.shadow.querySelector("counter-component");
     counter.addEventListener("finished", async () => {
-      await state.getGameResults();
+      // await state.getGameResults();
       this.endGame();
     });
   }
@@ -42,6 +55,7 @@ class GamePage extends HTMLElement {
   }
 
   showHandsAnimation() {
+    console.log("mostrando animacion de manos")
     const main = <HTMLElement>this.shadow.querySelector(".main");
     main.innerHTML = "";
     const cs = state.getState();

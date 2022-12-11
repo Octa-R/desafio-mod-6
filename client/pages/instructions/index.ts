@@ -12,6 +12,11 @@ class InstructionsPage extends HTMLElement {
       if (cs.opponentPressedStart && cs.playerPressedStart) {
         unsubscribeWaitingForStart()
         console.log("ambos presionaron start redirigiendo a /game")
+        if (!cs.listening) {
+          // state.listen()
+          cs.listening = true
+          state.setState(cs)
+        }
         Router.go("/game")
       }
     })
@@ -24,7 +29,6 @@ class InstructionsPage extends HTMLElement {
     const btn = this.shadow.querySelector("btn-component");
 
     const startGame = (evt) => {
-      //se remueve el listener asi no se hacen consultas de mas a la api
       btn?.removeEventListener("click", startGame, true);
       state.startGame()
     }

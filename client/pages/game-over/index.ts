@@ -39,7 +39,6 @@ class ResultsPage extends HTMLElement {
 
   render() {
     const style = document.createElement("style");
-    const cs = state.getState();
     style.innerHTML = `
         .main {
           box-sizing:border-box;
@@ -53,14 +52,27 @@ class ResultsPage extends HTMLElement {
           justify-content: space-between;
         }
       `;
+    const cs = state.getState();
+    const resultado: number = state.getWinner();
+    if (resultado > 0) {
+      this.starType = "win";
+    } else if (resultado < 0) {
+      this.starType = "lose";
+    } else {
+      this.starType = "empate";
+    }
+    console.log("cs", cs);
+
 
     this.shadow.innerHTML = `
         <main class="main">
           <star-component type="${this.starType}">
           </star-component>
           <score-component 
-            player="${cs.playerScore}"
-            opponent="${cs.opponentScore}"
+            playerScore="${cs.playerScore}"
+            playerName="${cs.userName}"
+            opponentScore="${cs.opponentScore}"
+            opponentName="${cs.opponentName}"
           >
           </score-component>
           <btn-component class="jugar" text="Volver a Jugar">

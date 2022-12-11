@@ -2,13 +2,17 @@ class ScoreComponent extends HTMLElement {
   shadow: ShadowRoot;
   type: string;
   playerScore: number;
+  playerName: string;
+  opponentName: string;
   opponentScore: number;
 
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
-    this.opponentScore = Number(this.getAttribute("opponent"));
-    this.playerScore = Number(this.getAttribute("player"));
+    this.opponentScore = Number(this.getAttribute("opponentScore"));
+    this.opponentName = this.getAttribute("opponentName")?.toString() || "";
+    this.playerScore = Number(this.getAttribute("playerScore"));
+    this.playerName = this.getAttribute("playerName")?.toString() || "";
   }
   connectedCallback() {
     this.render();
@@ -42,8 +46,8 @@ class ScoreComponent extends HTMLElement {
     this.shadow.innerHTML = `
     <div class="score-board">
       <h2 class="score">Score</h2>
-      <div class="score-text">Vos: ${this.playerScore}</div>
-      <div class="score-text" >Máquina ${this.opponentScore}</div>
+      <div class="score-text">${this.playerName}: ${this.playerScore}</div>
+      <div class="score-text" >${this.opponentName}: ${this.opponentScore}</div>
     </div>`;
     this.shadow.appendChild(style);
   }

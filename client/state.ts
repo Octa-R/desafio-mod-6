@@ -5,7 +5,6 @@ import { State } from "./types/state";
 import { Play } from "./types/play";
 import { Router } from "@vaadin/router";
 import { GameData } from "./types/gameData";
-const moveList: Play[] = ["tijeras", "papel", "piedra"];
 export const state = {
   data: {
     roomId: "",
@@ -13,14 +12,15 @@ export const state = {
     results: [],
     userId: "",
     userName: "",
-    playerScore: [],
+    playerScore: 0,
     playerPressedStart: false,
     playerChoice: "",
     opponentName: "",
-    opponentScore: [],
+    opponentScore: 0,
     opponentIsOnline: false,
     opponentPressedStart: false,
     opponentChoice: "",
+    listening: false,
   },
   apiUrl: "",
   storageKey: "game-state",
@@ -74,49 +74,36 @@ export const state = {
     })
     await res.json();
   },
-  getComputerMove() {
-    const randNumber: number = Math.floor(Math.random() * 3);
-    const computerPlay: Play = moveList[randNumber];
-    return computerPlay;
-  },
-  whoWins(computer: Play, player: Play) {
-    // -1 gana pc
+  getWinner(): number {
+    // -1 gana opponent
     // 0 empate
     // 1 gana player
     // si son iguales -> 0
-    // si pc es tijera ->
+    // si oponent es tijera ->
     //    si player papel -> player pierde
     //    si player piedra -> player gana
-
-    if (computer === player) {
+    // 0 si alguno de los jugadores no elige
+    const cs = this.getState()
+    const player = cs.playerChoice;
+    const opponent = cs.opponentChoice;
+    if (!player || !opponent) {
       return 0;
-    } else {
-      if (computer === "tijeras") {
-        return player === "papel" ? -1 : 1;
-      }
-      if (computer === "papel") {
-        return player === "piedra" ? -1 : 1;
-      }
-      if (computer === "piedra") {
-        return player === "tijeras" ? -1 : 1;
-      }
     }
-  },
-  getPlayerScore() {
-    const game = this.getState();
-    return game.results.reduce((prev, act) => {
-      return act > 0 ? prev + 1 : prev;
-    }, 0);
-  },
-  getComputerScore() {
-    const game = this.getState();
-    return game.results.reduce((prev, act) => {
-      return act < 0 ? prev + 1 : prev;
-    }, 0);
-  },
-  getLastResult() {
-    const game = this.getState();
-    return game.results.at(-1);
+
+    if (opponent === player) {
+      return 0;
+    }
+
+    if (opponent === "tijeras") {
+      return player === "papel" ? -1 : 1;
+    }
+    if (opponent === "papel") {
+      return player === "piedra" ? -1 : 1;
+    }
+    if (opponent === "piedra") {
+      return player === "tijeras" ? -1 : 1;
+    }
+    return 0;
   },
   resetResults() {
     this.setState({
@@ -184,7 +171,6 @@ export const state = {
       }
     })
   },
-  makeMoveToGame(move) { },
   getUserName() {
     return this.data.userName;
   },
@@ -208,7 +194,7 @@ export const state = {
   async startGame() {
     const cs: GameData = this.getState()
 
-    const body = { userName: cs.userName, rtdbRoomId: cs.rtdbRoomId }
+    const body = { userName: cs.userName, rtdbRoomId: cs.rtdbRoomId, userId: cs.userId }
     const res = await fetch(`${this.apiUrl}/${cs.roomId}`, {
       method: "PATCH",
       mode: 'cors',
@@ -225,59 +211,55 @@ export const state = {
     }
     cs.playerPressedStart = true;
     this.setState(cs)
-
+    // leer si el oponente presiono start
     const opponentPressedStart = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/start`);
     const snapshot = await get(opponentPressedStart)
     if (snapshot.exists()) {
       const start = snapshot.val()
-      if (start == true) {
+      if (start === true) {
+        console.log("el oponente presiono start en el get");
         const cs: GameData = this.getState()
         cs.opponentPressedStart = true;
         this.setState(cs)
-        return
       }
     }
-
+    // si no presiono quedarse escuchando que presione start
     onValue(opponentPressedStart, (snapshot) => {
       if (snapshot.exists()) {
+        const start = snapshot.val()
+        console.log("el oponente presiono start en onvalue");
         const cs: GameData = this.getState()
-        cs.opponentPressedStart = snapshot.val();
+        cs.opponentPressedStart = start
         this.setState(cs)
       }
     })
+
+    this.waitForopponentChoice()
   },
-  async getopponentChoice() {
+  async getOpponentChoice() {
     const cs = this.getState()
-    const opponentChoice = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/move`);
+    const opponentChoice = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/choice`);
     const snapshot = await get(opponentChoice)
     if (snapshot.exists()) {
       const move = snapshot.val()
       if (move) {
-        return move
+        console.log("en getopponentChoice", move)
       }
     }
     return null
   },
   async waitForopponentChoice() {
     const cs = this.getState()
-    const opponentChoice = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/move`);
+    const opponentChoice = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/choice`);
     onValue(opponentChoice, (snapshot) => {
-      const data = snapshot.val();
+      const data: Play = snapshot.val();
       if (data) {
+        console.log("en waitForopponentChoice", data)
         const cs = this.getState()
         cs.opponentChoice = data;
         this.setState(cs)
       }
     })
   },
-  async getGameResults() {
-    const move = await this.getopponentChoice()
-    if (move != null) {
-      const cs = this.getState()
-      cs.opponentChoice = move;
-      this.setState(cs)
-      return
-    }
-    this.waitForopponentChoice()
-  },
+
 };
