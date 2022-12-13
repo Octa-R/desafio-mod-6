@@ -16,7 +16,6 @@ rooms.post("/", createRoom);
 rooms.post("/:roomId", joinRoom);
 rooms.patch("/:roomId", startGame);
 rooms.post("/:roomId/move", makeMove);
-// rooms.post("/:roomId/listen", listen);
 //-------------
 app.listen(port, () => {
   console.log(`app en  http://localhost:${port}`);
