@@ -38,7 +38,6 @@ class GamePage extends HTMLElement {
     });
     const counter = <HTMLElement>this.shadow.querySelector("counter-component");
     counter.addEventListener("finished", async () => {
-      // await state.getGameResults();
       this.endGame();
     });
   }
@@ -46,8 +45,7 @@ class GamePage extends HTMLElement {
     const cs = state.getState();
     console.log(`termino el juego, el oponente jugo ${cs.opponentChoice} y yo jugue ${cs.playerChoice}`)
     if (cs.playerChoice && cs.opponentChoice) {
-      console.log("ambos jugamos, redirigiendo a /game-over");
-      Router.go("/game-over");
+      console.log("ambos jugamos");
       this.showHandsAnimation();
     } else {
       Router.go("/instructions");
@@ -73,9 +71,9 @@ class GamePage extends HTMLElement {
       </hand-component>
       `;
 
-    // setTimeout(() => {
-    //   Router.go("/game-over");
-    // }, 2000);
+    setTimeout(() => {
+      Router.go("/game-over");
+    }, 2000);
   }
 
   render() {

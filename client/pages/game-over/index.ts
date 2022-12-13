@@ -16,7 +16,7 @@ class ResultsPage extends HTMLElement {
       const cs = state.getState();
       this.playerScore = cs.playerScore;
       this.opponentScore = cs.opponentScore;
-      this.result = cs.playerIsWinner;
+      this.result = cs.result;
       this.render();
     });
   }
@@ -39,7 +39,7 @@ class ResultsPage extends HTMLElement {
 
     const resetBtn = <HTMLElement>this.shadow.querySelector(".reset-btn");
     resetBtn?.addEventListener("click", () => {
-      state.resetResults();
+      // state.resetResults();
     });
   }
 

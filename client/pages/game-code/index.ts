@@ -7,9 +7,9 @@ class GameCodePage extends HTMLElement {
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
-    this.roomId = state.getRoomId()
     const unsubscribeWaitingForOpponent = state.subscribe(() => {
-      if (state.isOpponentOnline()) {
+      const cs = state.getState()
+      if (cs.opponentIsOnline) {
         unsubscribeWaitingForOpponent()
         Router.go("/instructions")
       }
@@ -35,6 +35,8 @@ class GameCodePage extends HTMLElement {
   }
 
   render() {
+    const cs = state.getState()
+    this.roomId = cs.roomId;
     const style = document.createElement("style");
     style.innerHTML = `
         .container {

@@ -106,13 +106,6 @@ export const state = {
     }
     return 0;
   },
-  resetResults() {
-    this.setState({
-      player: [],
-      computer: [],
-      results: [],
-    });
-  },
   async joinGame(data) {
     if (!data.name || !data.code) {
       console.error("faltan datos para unirse a la partida")
@@ -172,26 +165,6 @@ export const state = {
       }
     })
   },
-  getUserName() {
-    return this.data.userName;
-  },
-  getRoomId() {
-    return this.data.roomId;
-  },
-  isOpponentOnline() {
-    const cs = this.getState()
-    if (cs.opponentIsOnline) {
-      return true
-    }
-    return false;
-  },
-  opponentPressedStart() {
-    const cs = this.getState()
-    if (cs.opponentPressedStart) {
-      return true
-    }
-    return false;
-  },
   async startGame() {
     const cs = this.getState()
 
@@ -227,6 +200,7 @@ export const state = {
     }
     this.listenOpponentChoice()
     this.listenGameScore()
+    this.listenResults()
   },
   async listenGameScore() {
     const cs = this.getState();
@@ -290,4 +264,17 @@ export const state = {
       }
     })
   },
+  async listenResults() {
+    const cs = this.getState()
+    const results = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.userName}/results`);
+    onValue(results, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        console.log("en listenResults", data)
+        const cs = this.getState()
+        cs.results = data;
+        this.setState(cs)
+      }
+    })
+  }
 };

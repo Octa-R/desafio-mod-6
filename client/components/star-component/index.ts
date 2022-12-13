@@ -7,16 +7,16 @@ class StarComponent extends HTMLElement {
   type: string;
   text: string;
   imgUrl: string;
-  types: string[] = ["win", "lose", "empate"];
+  types: string[] = ["winner", "loser", "empate"];
 
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
     this.type = this.getAttribute("type") || "lose";
-    if (this.type === "win") {
+    if (this.type === "winner") {
       this.text = "Ganaste!";
       this.imgUrl = winStarImg;
-    } else if (this.type === "lose") {
+    } else if (this.type === "loser") {
       this.text = "Perdiste!";
       this.imgUrl = loseStarImg;
     } else if (this.type === "empate") {

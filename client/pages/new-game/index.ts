@@ -3,11 +3,9 @@ import { Router } from "@vaadin/router";
 const imageURL = require("url:../../img/fondo.png");
 class NewGamePage extends HTMLElement {
   shadow: ShadowRoot;
-  roomId: string;
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
-    this.roomId = state.getRoomId()
   }
 
   connectedCallback() {

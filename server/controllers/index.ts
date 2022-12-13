@@ -38,7 +38,44 @@ function getWinner(player1, player2) {
   } else if (player1Choice === "tijeras") {
     return player2Choice === "papel" ? player1.name : player2.name;
   }
-}//--------------------------------------------------------------------------------------------
+}
+
+async function listenToMoves(rtdbRoomId: string, roomId: string) {
+  const roomRef = rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}`)
+  roomRef.on("value", (snapshot) => {
+    if (!snapshot.exists) {
+      console.log("no hay data");
+      return
+    }
+    const data = snapshot.val();
+    const player1Name = Object.keys(data)[0]
+    const player2Name = Object.keys(data)[1]
+    const player1 = data[player1Name]
+    const player2 = data[player2Name]
+    if (player1.choice && player2.choice) {
+      setTimeout(() => {
+        const winner = getWinner(player1, player2);
+        const loser = winner === player1.name ? player2.name : player1.name;
+        const updates = {
+          [`/rooms/${rtdbRoomId}/${roomId}/${player1Name}/choice`]: "",
+          [`/rooms/${rtdbRoomId}/${roomId}/${player2Name}/choice`]: "",
+        }
+        if (winner === "empate") {
+          updates[`/rooms/${rtdbRoomId}/${roomId}/${player1Name}/result`] = "empate"
+          updates[`/rooms/${rtdbRoomId}/${roomId}/${player2Name}/result`] = "empate"
+        } else {
+          updates[`/rooms/${rtdbRoomId}/${roomId}/${loser}/result`] = "loser"
+          updates[`/rooms/${rtdbRoomId}/${roomId}/${winner}/result`] = "winner"
+        }
+
+        rtdb.ref().update(updates)
+        rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}/${winner}/score`).set(admin.database.ServerValue.increment(1))
+        rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}/${loser}/score`).set(admin.database.ServerValue.increment(0))
+      }, 500)
+    }
+  })
+}
+//--------------------------------------------------------------------------------------------
 const createRoom = (req, res) => {
   const userName: string = req.query.userName.toString()
   const rtdbRoomId = longId();
@@ -142,32 +179,7 @@ const joinRoom = async (req, res) => {
   });
 }
 
-async function listenToMoves(rtdbRoomId: string, roomId: string) {
-  const roomRef = rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}`)
-  roomRef.on("value", (snapshot) => {
-    if (!snapshot.exists) {
-      console.log("no hay data");
-      return
-    }
-    const data = snapshot.val();
-    const player1Name = Object.keys(data)[0]
-    const player2Name = Object.keys(data)[1]
-    const player1 = data[player1Name]
-    const player2 = data[player2Name]
-    if (player1.choice && player2.choice) {
-      setTimeout(() => {
-        const winner = getWinner(player1, player2);
-        console.log("winner", winner);
-        const updates = {
-          [`/rooms/${rtdbRoomId}/${roomId}/${player1Name}/choice`]: "",
-          [`/rooms/${rtdbRoomId}/${roomId}/${player2Name}/choice`]: "",
-        }
-        rtdb.ref().update(updates)
-        rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}/${winner}/score`).set(admin.database.ServerValue.increment(1))
-      }, 500)
-    }
-  })
-}
+
 //-----------------------------------------------------------------
 const startGame = async (req, res) => {
   const { userName, rtdbRoomId, userId } = req.body;
