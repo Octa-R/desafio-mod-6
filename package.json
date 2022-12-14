@@ -8,7 +8,7 @@
     "dev": "npx concurrently --names \"CLIENT,API\" -c \"bgBlue.bold,bgMagenta.bold\" \"yarn dev:front\" \"yarn dev:api\"",
     "build:front": "parcel build ./client/index.html --dist-dir public",
     "build:api": "tsc",
-    "build": "yarn build:front && build:api",
+    "build": "yarn build:front && yarn build:api",
     "start": "node ./server/index.js"
   },
   "dependencies": {
