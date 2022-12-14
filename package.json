@@ -1,7 +1,6 @@
 {
   "name": "desafio-final-m6",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
   "scripts": {
     "dev:api": "nodemon ./server/dev.ts",
