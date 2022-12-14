@@ -11,7 +11,6 @@ const longId = customAlphabet(
 //--------------------------------------------------------------------------------------------
 async function userExists(roomId, userName, userId): Promise<boolean> {
   const roomDoc = await roomsCollection.doc(roomId.toString()).get();
-  // codigo repetido alert
   const roomData = roomDoc.data();
   const { player1, player2 } = roomData;
   const userArray = [player1, player2];
@@ -26,27 +25,32 @@ async function roomExists(roomId): Promise<boolean> {
   return roomDoc.exists
 }
 
-function getWinner(player1, player2) {
+function getWinner(player1, player2): "empate" | string {
   const { choice: player1Choice } = player1;
   const { choice: player2Choice } = player2;
+
   if (player1Choice === player2Choice) {
     return "empate";
-  } else if (player1Choice === "piedra") {
+  }
+  if (player1Choice === "piedra") {
     return player2Choice === "tijeras" ? player1.name : player2.name;
-  } else if (player1Choice === "papel") {
+  }
+  if (player1Choice === "papel") {
     return player2Choice === "piedra" ? player1.name : player2.name;
-  } else if (player1Choice === "tijeras") {
+  }
+  if (player1Choice === "tijeras") {
     return player2Choice === "papel" ? player1.name : player2.name;
   }
 }
 
-async function listenToMoves(rtdbRoomId: string, roomId: string) {
+function listenToMoves(rtdbRoomId: string, roomId: string) {
   const roomRef = rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}`)
   roomRef.on("value", (snapshot) => {
     if (!snapshot.exists) {
       console.log("no hay data");
       return
     }
+
     const data = snapshot.val();
     const player1Name = Object.keys(data)[0]
     const player2Name = Object.keys(data)[1]
@@ -74,6 +78,7 @@ async function listenToMoves(rtdbRoomId: string, roomId: string) {
       }, 500)
     }
   })
+  return roomRef
 }
 //--------------------------------------------------------------------------------------------
 const createRoom = (req, res) => {
@@ -106,14 +111,14 @@ const createRoom = (req, res) => {
   const createGameState = gameStateRef.set(gameState)
 
   Promise.all([createFirebaseRoom, createGameState])
-    .then((response) => {
+    .then(() => {
       res.json({
         userId: userId,
         rtdbRoomId: rtdbRoomId,
         roomId: roomId,
       });
     })
-    .catch((err) => {
+    .catch(() => {
       res.json({ ok: false });
     });
 }
@@ -169,7 +174,11 @@ const joinRoom = async (req, res) => {
         id: userId
       }
     });
-  listenToMoves(rtdbRoomId, roomId)
+  const ref = listenToMoves(rtdbRoomId, roomId)
+  setTimeout(() => {
+    ref.off()
+  }, 4000000)
+
   res.json({
     ok: true,
     userId: userId,
@@ -178,8 +187,6 @@ const joinRoom = async (req, res) => {
     roomId: roomId,
   });
 }
-
-
 //-----------------------------------------------------------------
 const startGame = async (req, res) => {
   const { userName, rtdbRoomId, userId } = req.body;
@@ -197,8 +204,12 @@ const startGame = async (req, res) => {
   }
 
   const roomRef = rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}/${userName}/start`);
-  roomRef.set(true);
-  res.json({ ok: true });
+  try {
+    await roomRef.set(true);
+    res.json({ ok: true, message: "partida iniciada" });
+  } catch (e) {
+    res.status(400).json({ ok: false, message: "error al iniciar la partida" });
+  }
 }
 
 const makeMove = async (req, res) => {

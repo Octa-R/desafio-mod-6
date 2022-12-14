@@ -4,19 +4,13 @@ const imageURL = require("url:../../img/fondo.png");
 
 class ResultsPage extends HTMLElement {
   shadow: ShadowRoot;
-  playerScore: number;
-  opponentScore: number;
+
   starType: string;
-  result: "winner" | "loser" | "empate"
 
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
     state.subscribe(() => {
-      const cs = state.getState();
-      this.playerScore = cs.playerScore;
-      this.opponentScore = cs.opponentScore;
-      this.result = cs.result;
       this.render();
     });
   }
@@ -60,15 +54,16 @@ class ResultsPage extends HTMLElement {
       `;
 
     const cs = state.getState();
+    console.log("cs en game-over", cs)
 
     this.shadow.innerHTML = `
         <main class="main">
-          <star-component type="${this.result}">
+          <star-component type="${cs.result}">
           </star-component>
           <score-component 
-            playerScore="${this.playerScore}"
+            playerScore="${cs.playerScore}"
             playerName="${cs.userName}"
-            opponentScore="${this.opponentScore}"
+            opponentScore="${cs.opponentScore}"
             opponentName="${cs.opponentName}"
           >
           </score-component>

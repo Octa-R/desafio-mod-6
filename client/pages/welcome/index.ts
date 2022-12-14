@@ -13,11 +13,11 @@ class WelcomePage extends HTMLElement {
 
   addListeners() {
     const newGameBtn = this.shadow.querySelector(".new-game-btn");
-    newGameBtn?.addEventListener("click", (evt) => {
+    newGameBtn?.addEventListener("click", () => {
       Router.go("/new-game");
     });
     const joinGameBtn = this.shadow.querySelector(".join-game-btn");
-    joinGameBtn?.addEventListener("click", (evt) => {
+    joinGameBtn?.addEventListener("click", () => {
       Router.go("/join-game");
     });
   }

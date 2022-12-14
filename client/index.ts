@@ -7,6 +7,7 @@ import "./components/score-component";
 import "./components/star-component";
 import "./components/input-component"
 import "./pages/welcome";
+import "./pages/join-error"
 import "./pages/game";
 import "./pages/new-game";
 import "./pages/game-over";

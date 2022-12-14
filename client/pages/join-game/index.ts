@@ -13,8 +13,7 @@ class JoinGamePage extends HTMLElement {
   }
 
   addListeners() {
-    const joinBtn = this.shadow.querySelector(".join");
-    joinBtn?.addEventListener("click", (evt) => {
+    const joinGame = async () => {
       const nameInput = this.shadow.querySelector(".name-input") as any
       const codeInput = this.shadow.querySelector(".code-input") as any
 
@@ -22,10 +21,17 @@ class JoinGamePage extends HTMLElement {
         name: nameInput.getValue(),
         code: codeInput.getValue()
       }
-      state.joinGame(data)
-        .then(() => {
-          Router.go("/instructions")
-        })
+      try {
+        await state.joinGame(data)
+        Router.go("/instructions")
+      } catch (error) {
+        state.errorMessage = error
+        Router.go("/join-error")
+      }
+    }
+    const joinBtn = this.shadow.querySelector(".join");
+    joinBtn?.addEventListener("click", (evt) => {
+      joinGame();
     });
   }
 

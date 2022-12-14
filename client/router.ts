@@ -12,4 +12,5 @@ router.setRoutes([
   { path: "/waiting-for-opponent", component: "waiting-for-oponent" },
   { path: "/game", component: "game-page" },
   { path: "/game-over", component: "game-over" },
+  { path: "/join-error", component: "join-error" }
 ]);

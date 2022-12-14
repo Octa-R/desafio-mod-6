@@ -38,7 +38,7 @@ class InputComponent extends HTMLElement {
     `;
     this.shadow.innerHTML = `
       <div class="container">
-        <input class="input" type="text"  placeholder="${this.placeholder}">
+        <input class="input" type="text"  placeholder="${this.placeholder}" required>
       </div>
     `;
     this.shadow.appendChild(style);

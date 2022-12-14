@@ -1,7 +1,6 @@
 import { Storage } from "./types/storage";
-import { ref, onValue, get, set, child } from "firebase/database";
+import { ref, onValue, get } from "firebase/database";
 import { rtdb } from "./rtdb";
-import { State } from "./types/state";
 import { Play } from "./types/play";
 import { Router } from "@vaadin/router";
 import { GameData } from "./types/gameData";
@@ -9,7 +8,7 @@ export const state = {
   data: {
     roomId: "",
     rtdbRoomId: "",
-    results: [],
+    result: "",
     userId: "",
     userName: "",
     playerScore: 0,
@@ -23,6 +22,7 @@ export const state = {
     listening: false,
     playerIsWinner: "",
   },
+  errorMessage: "",
   apiUrl: "",
   storageKey: "game-state",
   listeners: [],
@@ -37,10 +37,9 @@ export const state = {
   setState(data: GameData) {
     this.data = data;
     console.log("set state", data);
-
     this.storage.save(this.storageKey, data);
     for (const cb of this.listeners) {
-      cb(this.getState());
+      cb();
     }
   },
   getState() {
@@ -51,7 +50,7 @@ export const state = {
     this.listeners.push(callback);
     //devuelve una funcion que si la ejecutamos hace unsubscribe
     return () => {
-      this.listeners = this.listeners.filter(e => e != callback)
+      this.listeners = this.listeners.filter(e => e !== callback)
     }
   },
   async move(playerChoice: Play) {
@@ -75,41 +74,9 @@ export const state = {
     })
     await res.json();
   },
-  getWinner(): number {
-    // -1 gana opponent
-    // 0 empate
-    // 1 gana player
-    // si son iguales -> 0
-    // si oponent es tijera ->
-    //    si player papel -> player pierde
-    //    si player piedra -> player gana
-    // 0 si alguno de los jugadores no elige
-    const cs = this.getState()
-    const player = cs.playerChoice;
-    const opponent = cs.opponentChoice;
-    if (!player || !opponent) {
-      return 0;
-    }
-
-    if (opponent === player) {
-      return 0;
-    }
-
-    if (opponent === "tijeras") {
-      return player === "papel" ? -1 : 1;
-    }
-    if (opponent === "papel") {
-      return player === "piedra" ? -1 : 1;
-    }
-    if (opponent === "piedra") {
-      return player === "tijeras" ? -1 : 1;
-    }
-    return 0;
-  },
   async joinGame(data) {
     if (!data.name || !data.code) {
-      console.error("faltan datos para unirse a la partida")
-      return
+      throw "Faltan datos"
     }
     const res = await fetch(`${this.apiUrl}/${data.code}?userName=${data.name}`, {
       method: "post",
@@ -119,9 +86,9 @@ export const state = {
     })
 
     const json = await res.json()
+    console.log("al intentar unirse a la room", json)
     if (json.ok != true) {
-      console.error(json.message)
-      return
+      throw json.message
     }
     const cs = this.getState()
     cs.roomId = data.code;
@@ -167,6 +134,11 @@ export const state = {
   },
   async startGame() {
     const cs = this.getState()
+    if (!cs.listening) {
+      cs.listening = true;
+      this.setState(cs)
+      this.listenToRoom()
+    }
 
     const body = { userName: cs.userName, rtdbRoomId: cs.rtdbRoomId, userId: cs.userId }
     const res = await fetch(`${this.apiUrl}/${cs.roomId}`, {
@@ -184,16 +156,10 @@ export const state = {
       return
     }
     cs.playerPressedStart = true;
-    if (cs.listening) {
-      return;
-    }
-    cs.listening = true;
-    this.setState(cs)
-    this.listenToRoom()
   },
   async listenToRoom() {
     // leer si el oponente presiono start
-    const pressedStart = await this.getOpponentStart()
+    const pressedStart = await this.opponentPressedStartButton()
     if (!pressedStart) {
       // si no presiono quedarse escuchando que presione start
       this.listenOpponentStart()
@@ -202,29 +168,26 @@ export const state = {
     this.listenGameScore()
     this.listenResults()
   },
-  async listenGameScore() {
+  listenGameScore() {
     const cs = this.getState();
     const opponentScore = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/score`);
     const playerScore = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.userName}/score`);
     onValue(opponentScore, (snapShot) => {
       const data = snapShot.val()
-      console.log("opponent score", data)
-      if (data) {
-        cs.opponentScore = data;
-        this.setState(cs)
-      }
+      const cs = this.getState();
+      cs.opponentScore = data;
+      this.setState(cs)
     })
     onValue(playerScore, (snapShot) => {
       const data = snapShot.val()
-      console.log("player score", data)
-      if (data) {
-        cs.playerScore = data;
-        this.setState(cs)
-      }
+      const cs = this.getState();
+      cs.playerScore = data;
+      console.log("se setea el estado en listenGameScore")
+      this.setState(cs)
     }
     )
   },
-  async getOpponentStart() {
+  async opponentPressedStartButton() {
     const cs = this.getState()
     const opponentPressedStart = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/start`);
     const snapshot = await get(opponentPressedStart)
@@ -234,12 +197,13 @@ export const state = {
         // el oponente ya presiono start
         const cs = this.getState()
         cs.opponentPressedStart = true;
+        console.log("se setea el estado en opponentPressedStartButton")
         this.setState(cs)
         return true;
       }
     }
   },
-  async listenOpponentStart() {
+  listenOpponentStart() {
     const cs = this.getState()
     const opponentPressedStart = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/start`);
     onValue(opponentPressedStart, (snapshot) => {
@@ -247,32 +211,34 @@ export const state = {
         const start = snapshot.val()
         const cs: GameData = this.getState()
         cs.opponentPressedStart = start
+        console.log("se setea el estado en listenOpponentStart")
         this.setState(cs)
       }
     })
   },
-  async listenOpponentChoice() {
+  listenOpponentChoice() {
     const cs = this.getState()
     const opponentChoice = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/choice`);
     onValue(opponentChoice, (snapshot) => {
       const data: Play = snapshot.val();
       if (data) {
-        console.log("en waitForopponentChoice", data)
         const cs = this.getState()
         cs.opponentChoice = data;
+        console.log("se setea el estado en listenOpponentChoice")
         this.setState(cs)
       }
     })
   },
-  async listenResults() {
+  listenResults() {
     const cs = this.getState()
-    const results = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.userName}/results`);
+    const results = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.userName}/result`);
     onValue(results, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        console.log("en listenResults", data)
+        console.log("se actualiza el resultado:", data)
         const cs = this.getState()
-        cs.results = data;
+        cs.result = data;
+        console.log("se setea el estado en listenResults")
         this.setState(cs)
       }
     })
