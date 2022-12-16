@@ -15,7 +15,6 @@ class NewGamePage extends HTMLElement {
   addListeners() {
     const startBtn = this.shadow.querySelector(".start-btn")
     startBtn?.addEventListener("click", () => {
-      console.log("start game")
       const nameInput = this.shadow.querySelector(".name-input") as any
       const cs = state.getState()
       cs.userName = nameInput.getValue();

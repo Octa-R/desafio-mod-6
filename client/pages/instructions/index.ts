@@ -8,12 +8,8 @@ class InstructionsPage extends HTMLElement {
     this.shadow = this.attachShadow({ mode: "open" });
     const unsubscribeWaitingForStart = state.subscribe(() => {
       const cs = state.getState()
-      console.log("escuchando cambios de estado")
-      console.log("cs.opponentPressedStart", cs.opponentPressedStart)
-      console.log("cs.playerPressedStart", cs.playerPressedStart)
       if (cs.opponentPressedStart && cs.playerPressedStart) {
         unsubscribeWaitingForStart()
-        console.log("ambos presionaron start redirigiendo a /game")
         Router.go("/game")
       }
     })

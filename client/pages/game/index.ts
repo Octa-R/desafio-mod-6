@@ -30,9 +30,7 @@ class GamePage extends HTMLElement {
   }
   endGame() {
     const cs = state.getState();
-    console.log(`termino el juego, el oponente jugo ${cs.opponentChoice} y yo jugue ${cs.playerChoice}`)
     if (cs.playerChoice && cs.opponentChoice) {
-      console.log("ambos jugamos");
       this.showHandsAnimation();
     } else {
       Router.go("/instructions");
@@ -40,7 +38,6 @@ class GamePage extends HTMLElement {
   }
 
   showHandsAnimation() {
-    console.log("mostrando animacion de manos")
     const main = <HTMLElement>this.shadow.querySelector(".main");
     main.innerHTML = "";
     const cs = state.getState();

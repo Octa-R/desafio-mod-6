@@ -36,7 +36,6 @@ export const state = {
   },
   setState(data: GameData) {
     this.data = data;
-    console.log("set state", data);
     this.storage.save(this.storageKey, data);
     for (const cb of this.listeners) {
       cb();
@@ -86,7 +85,6 @@ export const state = {
     })
 
     const json = await res.json()
-    console.log("al intentar unirse a la room", json)
     if (json.ok != true) {
       throw json.message
     }
@@ -134,14 +132,12 @@ export const state = {
   },
   async startGame() {
     const cs = this.getState()
-
     if (!cs.listening) {
       cs.listening = true;
-      cs.playerPressedStart = true;
-      console.log("se setea el estado en startGame", cs)
       this.setState(cs)
       this.listenToRoom()
     }
+
 
     const body = { userName: cs.userName, rtdbRoomId: cs.rtdbRoomId, userId: cs.userId }
     const res = await fetch(`${this.apiUrl}/${cs.roomId}`, {
@@ -158,7 +154,9 @@ export const state = {
       console.error(json.message)
       return
     }
-
+    const cs2 = this.getState()
+    cs2.playerPressedStart = true;
+    this.setState(cs2)
   },
   async listenToRoom() {
     // leer si el oponente presiono start
@@ -179,14 +177,12 @@ export const state = {
       const data = snapShot.val()
       const cs = this.getState();
       cs.opponentScore = data;
-      console.log("se setea el estado en listenGameScore", cs)
       this.setState(cs)
     })
     onValue(playerScore, (snapShot) => {
       const data = snapShot.val()
       const cs = this.getState();
       cs.playerScore = data;
-      console.log("se setea el estado en listenGameScore", cs)
       this.setState(cs)
     }
     )
@@ -201,7 +197,6 @@ export const state = {
         // el oponente ya presiono start
         const cs = this.getState()
         cs.opponentPressedStart = true;
-        console.log("se setea el estado en opponentPressedStartButton", cs)
         this.setState(cs)
         return true;
       }
@@ -215,7 +210,6 @@ export const state = {
         const start = snapshot.val()
         const cs: GameData = this.getState()
         cs.opponentPressedStart = start
-        console.log("se setea el estado en listenOpponentStart", cs)
         this.setState(cs)
       }
     })
@@ -228,7 +222,6 @@ export const state = {
       if (data) {
         const cs = this.getState()
         cs.opponentChoice = data;
-        console.log("se setea el estado en listenOpponentChoice", cs)
         this.setState(cs)
       }
     })
@@ -239,10 +232,8 @@ export const state = {
     onValue(results, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        console.log("se actualiza el resultado:", data)
         const cs = this.getState()
         cs.result = data;
-        console.log("se setea el estado en listenResults", cs)
         this.setState(cs)
       }
     })

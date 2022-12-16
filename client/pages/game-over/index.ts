@@ -54,7 +54,6 @@ class ResultsPage extends HTMLElement {
       `;
 
     const cs = state.getState();
-    console.log("cs en game-over", cs)
 
     this.shadow.innerHTML = `
         <main class="main">

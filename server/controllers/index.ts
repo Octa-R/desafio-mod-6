@@ -47,7 +47,6 @@ function listenToMoves(rtdbRoomId: string, roomId: string) {
   const roomRef = rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}`)
   roomRef.on("value", (snapshot) => {
     if (!snapshot.exists) {
-      console.log("no hay data");
       return
     }
 
