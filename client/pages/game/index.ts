@@ -60,7 +60,7 @@ class GamePage extends HTMLElement {
 
     setTimeout(() => {
       Router.go("/game-over");
-    }, 2000);
+    }, 3000);
   }
 
   render() {

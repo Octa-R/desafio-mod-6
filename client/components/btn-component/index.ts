@@ -10,10 +10,12 @@ class ButtonComponent extends HTMLElement {
     this.text = this.getAttribute("text") || "";
     this.type = this.getAttribute("type") || ""
   }
+
   connectedCallback() {
     this.render();
   }
-  addListeners() {
+
+  addRipple() {
     function createRipple(event) {
       const button = event.currentTarget;
 
@@ -38,6 +40,7 @@ class ButtonComponent extends HTMLElement {
     const btn = this.shadow.querySelector(".button")
     btn?.addEventListener("click", createRipple);
   }
+
   addLoading() {
     const btn = this.shadow.querySelector(".button")
     btn?.addEventListener("click", evt => {
@@ -129,9 +132,11 @@ class ButtonComponent extends HTMLElement {
     `;
     if (this.type === "loader") {
       this.addLoading()
+    } else {
+      this.addRipple()
     }
+
     this.shadow.appendChild(style);
-    this.addListeners()
   }
 }
 

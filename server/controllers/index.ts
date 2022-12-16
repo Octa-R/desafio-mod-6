@@ -87,6 +87,11 @@ const createRoom = (req, res) => {
   const roomId = shortId();
   const userId = longId();
 
+  if (!userName) {
+    res.status(400).json({ ok: false, message: "el nombre de usuario es requerido" })
+    return
+  }
+
   const firebaseRoom = {
     player1: {
       name: userName,

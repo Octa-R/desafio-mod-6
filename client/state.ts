@@ -134,8 +134,11 @@ export const state = {
   },
   async startGame() {
     const cs = this.getState()
+
     if (!cs.listening) {
       cs.listening = true;
+      cs.playerPressedStart = true;
+      console.log("se setea el estado en startGame", cs)
       this.setState(cs)
       this.listenToRoom()
     }
@@ -155,7 +158,7 @@ export const state = {
       console.error(json.message)
       return
     }
-    cs.playerPressedStart = true;
+
   },
   async listenToRoom() {
     // leer si el oponente presiono start
@@ -176,13 +179,14 @@ export const state = {
       const data = snapShot.val()
       const cs = this.getState();
       cs.opponentScore = data;
+      console.log("se setea el estado en listenGameScore", cs)
       this.setState(cs)
     })
     onValue(playerScore, (snapShot) => {
       const data = snapShot.val()
       const cs = this.getState();
       cs.playerScore = data;
-      console.log("se setea el estado en listenGameScore")
+      console.log("se setea el estado en listenGameScore", cs)
       this.setState(cs)
     }
     )
@@ -197,7 +201,7 @@ export const state = {
         // el oponente ya presiono start
         const cs = this.getState()
         cs.opponentPressedStart = true;
-        console.log("se setea el estado en opponentPressedStartButton")
+        console.log("se setea el estado en opponentPressedStartButton", cs)
         this.setState(cs)
         return true;
       }
@@ -211,7 +215,7 @@ export const state = {
         const start = snapshot.val()
         const cs: GameData = this.getState()
         cs.opponentPressedStart = start
-        console.log("se setea el estado en listenOpponentStart")
+        console.log("se setea el estado en listenOpponentStart", cs)
         this.setState(cs)
       }
     })
@@ -224,7 +228,7 @@ export const state = {
       if (data) {
         const cs = this.getState()
         cs.opponentChoice = data;
-        console.log("se setea el estado en listenOpponentChoice")
+        console.log("se setea el estado en listenOpponentChoice", cs)
         this.setState(cs)
       }
     })
@@ -238,7 +242,7 @@ export const state = {
         console.log("se actualiza el resultado:", data)
         const cs = this.getState()
         cs.result = data;
-        console.log("se setea el estado en listenResults")
+        console.log("se setea el estado en listenResults", cs)
         this.setState(cs)
       }
     })
