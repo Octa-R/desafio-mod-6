@@ -6,8 +6,8 @@ export class Storage {
   }
 
   get(key): { data: any } {
-    const data: string = localStorage.getItem(key) || "undefined";
-    if (typeof data !== 'undefined') {
+    const data = localStorage.getItem(key) || null;
+    if (data !== null) {
       return JSON.parse(data);
     }
     return { data: {} };

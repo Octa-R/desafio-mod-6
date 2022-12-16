@@ -19,10 +19,12 @@ class NewGamePage extends HTMLElement {
       const cs = state.getState()
       cs.userName = nameInput.getValue();
       state.setState(cs);
-
       state.createNewGame()
         .then(() => {
           Router.go("/game-code");
+        })
+        .catch(e => {
+          Router.go("/join-error")
         })
     })
   }
@@ -50,7 +52,6 @@ class NewGamePage extends HTMLElement {
 
         .main {
           grid-area:main;
-
           display:flex;
           flex-direction:column;
           align-items:center;
@@ -58,16 +59,18 @@ class NewGamePage extends HTMLElement {
           gap:10px;
         }
       `;
+
     this.shadow.innerHTML = `
       <div class="container">
         <header class="header">
         </header>
         <main class="main">
           <input-component class="name-input" placeholder="nombre"></input-component>
-          <btn-component class="start-btn" text="Empezar juego!"></btn-component>
+          
+          <btn-component type="loader" class="start-btn" text="Empezar juego!"></btn-component>
         </main>
       </div>
-    `;
+      `;
     this.addListeners();
     this.shadow.appendChild(style);
   }
