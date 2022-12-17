@@ -5,9 +5,19 @@ import { Play } from "../../types/play";
 const imageURL = require("url:../../img/fondo.png");
 class GamePage extends HTMLElement {
   shadow: ShadowRoot;
+  eligieronAmbos: boolean = false;
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
+    const unsubscribe = state.subscribe(() => {
+      const cs = state.getState();
+      if (cs.opponentChoice && cs.playerChoice) {
+        console.log("subscribe callback en game, ambos eligieron redirigiendo a /game-over", cs);
+        this.eligieronAmbos = true;
+        unsubscribe();
+        this.endGame();
+      }
+    });
   }
 
   connectedCallback() {
@@ -25,21 +35,22 @@ class GamePage extends HTMLElement {
     });
     const counter = <HTMLElement>this.shadow.querySelector("counter-component");
     counter.addEventListener("finished", () => {
+      console.log("termino la cuenta regresiva  redirigiendo a /instructions")
       this.endGame();
     });
   }
   endGame() {
-    const cs = state.getState();
-    if (cs.playerChoice && cs.opponentChoice) {
+    if (this.eligieronAmbos) {
+      console.log("termino la cuenta regresiva y ambos eligieron redirigiendo a /game-over")
       this.showHandsAnimation();
     } else {
+      console.log("termino la cuenta regresiva y no eligieron redirigiendo a /instructions")
       Router.go("/instructions");
     }
   }
 
   showHandsAnimation() {
-    const main = <HTMLElement>this.shadow.querySelector(".main");
-    main.innerHTML = "";
+    const main = this.shadow.querySelector(".main") as any
     const cs = state.getState();
     main.innerHTML = `
       <hand-component 

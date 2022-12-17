@@ -138,7 +138,6 @@ export const state = {
       this.listenToRoom()
     }
 
-
     const body = { userName: cs.userName, rtdbRoomId: cs.rtdbRoomId, userId: cs.userId }
     const res = await fetch(`${this.apiUrl}/${cs.roomId}`, {
       method: "PATCH",
@@ -154,88 +153,26 @@ export const state = {
       console.error(json.message)
       return
     }
-    const cs2 = this.getState()
-    cs2.playerPressedStart = true;
-    this.setState(cs2)
   },
   async listenToRoom() {
-    // leer si el oponente presiono start
-    const pressedStart = await this.opponentPressedStartButton()
-    if (!pressedStart) {
-      // si no presiono quedarse escuchando que presione start
-      this.listenOpponentStart()
-    }
-    this.listenOpponentChoice()
-    this.listenGameScore()
-    this.listenResults()
-  },
-  listenGameScore() {
     const cs = this.getState();
-    const opponentScore = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/score`);
-    const playerScore = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.userName}/score`);
-    onValue(opponentScore, (snapShot) => {
+    const room = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}`);
+    onValue(room, (snapShot) => {
       const data = snapShot.val()
       const cs = this.getState();
-      cs.opponentScore = data;
+
+      cs.opponentChoice = data[cs.opponentName].choice
+      cs.opponentPressedStart = data[cs.opponentName].start
+      cs.opponentScore = data[cs.opponentName].score
+
+      cs.playerChoice = data[cs.userName].choice
+      cs.playerPressedStart = data[cs.userName].start
+      cs.playerScore = data[cs.userName].score
+
+      cs.result = data[cs.userName].result
+
+      console.log("se actualizara el estado", cs)
       this.setState(cs)
-    })
-    onValue(playerScore, (snapShot) => {
-      const data = snapShot.val()
-      const cs = this.getState();
-      cs.playerScore = data;
-      this.setState(cs)
-    }
-    )
-  },
-  async opponentPressedStartButton() {
-    const cs = this.getState()
-    const opponentPressedStart = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/start`);
-    const snapshot = await get(opponentPressedStart)
-    if (snapshot.exists()) {
-      const start = snapshot.val()
-      if (start === true) {
-        // el oponente ya presiono start
-        const cs = this.getState()
-        cs.opponentPressedStart = true;
-        this.setState(cs)
-        return true;
-      }
-    }
-  },
-  listenOpponentStart() {
-    const cs = this.getState()
-    const opponentPressedStart = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/start`);
-    onValue(opponentPressedStart, (snapshot) => {
-      if (snapshot.exists()) {
-        const start = snapshot.val()
-        const cs: GameData = this.getState()
-        cs.opponentPressedStart = start
-        this.setState(cs)
-      }
-    })
-  },
-  listenOpponentChoice() {
-    const cs = this.getState()
-    const opponentChoice = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.opponentName}/choice`);
-    onValue(opponentChoice, (snapshot) => {
-      const data: Play = snapshot.val();
-      if (data) {
-        const cs = this.getState()
-        cs.opponentChoice = data;
-        this.setState(cs)
-      }
-    })
-  },
-  listenResults() {
-    const cs = this.getState()
-    const results = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}/${cs.userName}/result`);
-    onValue(results, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const cs = this.getState()
-        cs.result = data;
-        this.setState(cs)
-      }
     })
   }
 };

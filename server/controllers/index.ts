@@ -10,7 +10,7 @@ const longId = customAlphabet(
 );
 //--------------------------------------------------------------------------------------------
 async function userExists(roomId, userName, userId): Promise<boolean> {
-  const roomDoc = await roomsCollection.doc(roomId.toString()).get();
+  const roomDoc = await roomsCollection.doc(roomId).get();
   const roomData = roomDoc.data();
   const { player1, player2 } = roomData;
   const userArray = [player1, player2];
@@ -21,7 +21,7 @@ async function userExists(roomId, userName, userId): Promise<boolean> {
 }
 
 async function roomExists(roomId): Promise<boolean> {
-  const roomDoc = await roomsCollection.doc(roomId.toString()).get();
+  const roomDoc = await roomsCollection.doc(roomId).get();
   return roomDoc.exists
 }
 
@@ -49,6 +49,7 @@ function listenToMoves(rtdbRoomId: string, roomId: string) {
     if (!snapshot.exists) {
       return
     }
+    console.log("cambio valor en la rtdb")
 
     const data = snapshot.val();
     const player1Name = Object.keys(data)[0]
@@ -56,25 +57,36 @@ function listenToMoves(rtdbRoomId: string, roomId: string) {
     const player1 = data[player1Name]
     const player2 = data[player2Name]
     if (player1.choice && player2.choice) {
-      setTimeout(() => {
-        const winner = getWinner(player1, player2);
-        const loser = winner === player1.name ? player2.name : player1.name;
-        const updates = {
-          [`/rooms/${rtdbRoomId}/${roomId}/${player1Name}/choice`]: "",
-          [`/rooms/${rtdbRoomId}/${roomId}/${player2Name}/choice`]: "",
+      console.log("ambos jugadores hicieron su jugada", player1.choice, player2.choice)
+      const winner = getWinner(player1, player2);
+      const loser = winner === player1.name ? player2.name : player1.name;
+      console.log("winner", winner)
+      console.log("loser", loser)
+      if (typeof winner === "undefined" || typeof loser === "undefined") {
+        console.log("winner o loser no definido")
+        return
+      }
+      const roomNewState = {
+        [player1Name]: {
+          ...player1
+        },
+        [player2Name]: {
+          ...player2,
         }
-        if (winner === "empate") {
-          updates[`/rooms/${rtdbRoomId}/${roomId}/${player1Name}/result`] = "empate"
-          updates[`/rooms/${rtdbRoomId}/${roomId}/${player2Name}/result`] = "empate"
-        } else {
-          updates[`/rooms/${rtdbRoomId}/${roomId}/${loser}/result`] = "loser"
-          updates[`/rooms/${rtdbRoomId}/${roomId}/${winner}/result`] = "winner"
-        }
+      }
+      roomNewState[player1Name].choice = ""
+      roomNewState[player2Name].choice = ""
 
-        rtdb.ref().update(updates)
-        rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}/${winner}/score`).set(admin.database.ServerValue.increment(1))
-        rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}/${loser}/score`).set(admin.database.ServerValue.increment(0))
-      }, 500)
+      if (winner === "empate") {
+        roomNewState[player1Name].result = "empate"
+        roomNewState[player2Name].result = "empate"
+      } else if (winner !== "empate") {
+        roomNewState[winner].result = "winner"
+        roomNewState[winner].score = roomNewState[winner].score + 1
+        roomNewState[loser].result = "loser"
+      }
+      rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}`).set(roomNewState)
+      // rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}/${winner}/score`).set(admin.database.ServerValue.increment(1))
     }
   })
   return roomRef
@@ -87,7 +99,12 @@ const createRoom = (req, res) => {
   const userId = longId();
 
   if (!userName) {
-    res.status(400).json({ ok: false, message: "el nombre de usuario es requerido" })
+    res
+      .status(400)
+      .json({
+        ok: false,
+        message: "el nombre de usuario es requerido"
+      })
     return
   }
 
@@ -129,17 +146,23 @@ const createRoom = (req, res) => {
 
 const joinRoom = async (req, res) => {
   const userName: string = req.query.userName.toString();
-  const { roomId } = req.params;
+  const roomId = req.params.roomId.toString();
 
   if (!userName || !roomId) {
     res
       .status(400)
-      .json({ ok: false, message: "faltan datos para unirse a la room" });
+      .json({
+        ok: false,
+        message: "faltan datos para unirse a la room"
+      });
   }
 
   const room: boolean = await roomExists(roomId)
   if (!room) {
-    res.status(400).json({ ok: false, message: "no existe la room" });
+    res.status(400).json({
+      ok: false,
+      message: "no existe la room"
+    });
     return;
   }
 
@@ -147,7 +170,10 @@ const joinRoom = async (req, res) => {
   const roomData = roomDoc.data();
   const { player2 } = roomData;
   if (player2) {
-    res.status(400).json({ ok: false, message: "la room ya esta llena" });
+    res.status(400).json({
+      ok: false,
+      message: "la room ya esta llena"
+    });
     return;
   }
 
@@ -194,57 +220,96 @@ const joinRoom = async (req, res) => {
 //-----------------------------------------------------------------
 const startGame = async (req, res) => {
   const { userName, rtdbRoomId, userId } = req.body;
-  const { roomId } = req.params;
+  const roomId = req.params.roomId.toString();
 
   const room: boolean = await roomExists(roomId)
   if (!room) {
-    res.status(400).json({ ok: false, message: "no existe la room" });
+    res
+      .status(400)
+      .json({
+        ok: false,
+        message: "no existe la room"
+      });
     return;
   }
   const user = await userExists(roomId, userName, userId)
   if (!user) {
-    res.status(400).json({ ok: false, message: "no eres el jugador de esta room" });
+    res
+      .status(400)
+      .json({
+        ok: false,
+        message: "no eres el jugador de esta room"
+      });
     return;
   }
 
-  const roomRef = rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}/${userName}/start`);
+  const updates = {}
+  updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/start`] = true
+  // updates[`/rooms/${rtdbRoomId}/${roomId}/state`] = "playing"
+
   try {
-    await roomRef.set(true);
-    res.json({ ok: true, message: "partida iniciada" });
+    await rtdb.ref().update(updates)
+    res.json({
+      ok: true,
+      message: "partida iniciada"
+    });
   } catch (e) {
-    res.status(400).json({ ok: false, message: "error al iniciar la partida" });
+    res
+      .status(400)
+      .json({
+        ok: false,
+        message: "error al iniciar la partida"
+      });
   }
 }
 
 const makeMove = async (req, res) => {
   const { userId, move, rtdbRoomId, userName } = req.body;
-  const { roomId } = req.params;
+  const roomId = req.params.roomId.toString();
   if (!userId || !move || !rtdbRoomId || !roomId || !userName) {
     res
       .status(400)
-      .json({ ok: false, message: "faltan datos para jugar" });
+      .json({
+        ok: false,
+        message: "faltan datos para jugar"
+      });
     return;
   }
   const room: boolean = await roomExists(roomId)
   if (!room) {
-    res.status(400).json({ ok: false, message: "no existe la room" });
+    res
+      .status(400)
+      .json({
+        ok: false,
+        message: "no existe la room"
+      });
     return;
   }
   const user = await userExists(roomId, userName, userId)
   if (!user) {
-    res.status(400).json({ ok: false, message: "no eres el jugador de esta room" });
+    res
+      .status(400)
+      .json({
+        ok: false,
+        message: "no eres el jugador de esta room"
+      });
     return;
   }
-
-  const updates = {};
-  updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/start`] = false;
-  updates[`/rooms/${rtdbRoomId}/${roomId}/${userName}/choice`] = move;
-
+  const updates = {
+    [`/rooms/${rtdbRoomId}/${roomId}/${userName}/choice`]: move,
+    [`/rooms/${rtdbRoomId}/${roomId}/${userName}/start`]: false
+  }
   try {
-    await rtdb.ref().update(updates);
-    res.json({ ok: true, message: "movimiento realizado" });
+    await rtdb.ref().update(updates)
+    res
+      .json({
+        ok: true,
+        message: "movimiento realizado"
+      });
   } catch (error) {
-    res.status(400).json({ ok: false, error: error })
+    res
+      .status(400)
+      .json({ ok: false, error: error })
   }
 }
 

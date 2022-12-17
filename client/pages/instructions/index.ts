@@ -9,6 +9,7 @@ class InstructionsPage extends HTMLElement {
     const unsubscribeWaitingForStart = state.subscribe(() => {
       const cs = state.getState()
       if (cs.opponentPressedStart && cs.playerPressedStart) {
+        console.log("subscribe callback en instruction, ambos presionaron start redirigiendo a /game", cs)
         unsubscribeWaitingForStart()
         Router.go("/game")
       }
@@ -22,6 +23,7 @@ class InstructionsPage extends HTMLElement {
     const btn = this.shadow.querySelector("btn-component");
 
     const startGame = (evt) => {
+      console.log("start game");
       btn?.removeEventListener("click", startGame, true);
       state.startGame()
     }
