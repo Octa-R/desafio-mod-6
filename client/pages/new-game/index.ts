@@ -1,5 +1,6 @@
 import { state } from "../../state";
 import { Router } from "@vaadin/router";
+import { InputComponent } from "../../components/input-component"
 const imageURL = require("url:../../img/fondo.png");
 class NewGamePage extends HTMLElement {
   shadow: ShadowRoot;
@@ -15,7 +16,7 @@ class NewGamePage extends HTMLElement {
   addListeners() {
     const startBtn = this.shadow.querySelector(".start-btn")
     startBtn?.addEventListener("click", () => {
-      const nameInput = this.shadow.querySelector(".name-input") as any
+      const nameInput = <InputComponent>this.shadow.querySelector(".name-input")
       const cs = state.getState()
       cs.userName = nameInput.getValue();
       state.setState(cs);
@@ -24,6 +25,7 @@ class NewGamePage extends HTMLElement {
           Router.go("/game-code");
         })
         .catch(e => {
+          state.errorMessage = e
           Router.go("/join-error")
         })
     })

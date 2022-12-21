@@ -49,7 +49,6 @@ function listenToMoves(rtdbRoomId: string, roomId: string) {
     if (!snapshot.exists) {
       return
     }
-    console.log("cambio valor en la rtdb")
 
     const data = snapshot.val();
     const player1Name = Object.keys(data)[0]
@@ -57,15 +56,10 @@ function listenToMoves(rtdbRoomId: string, roomId: string) {
     const player1 = data[player1Name]
     const player2 = data[player2Name]
     if (player1.choice && player2.choice) {
-      console.log("ambos jugadores hicieron su jugada", player1.choice, player2.choice)
+      // ambos jugadores hicieron su jugada
       const winner = getWinner(player1, player2);
       const loser = winner === player1.name ? player2.name : player1.name;
-      console.log("winner", winner)
-      console.log("loser", loser)
-      if (typeof winner === "undefined" || typeof loser === "undefined") {
-        console.log("winner o loser no definido")
-        return
-      }
+
       const roomNewState = {
         [player1Name]: {
           ...player1
@@ -309,7 +303,7 @@ const makeMove = async (req, res) => {
   } catch (error) {
     res
       .status(400)
-      .json({ ok: false, error: error })
+      .json({ ok: false, error })
   }
 }
 

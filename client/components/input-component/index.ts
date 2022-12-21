@@ -46,3 +46,5 @@ class InputComponent extends HTMLElement {
 }
 
 customElements.define("input-component", InputComponent);
+
+export { InputComponent }

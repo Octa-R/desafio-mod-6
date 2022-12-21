@@ -1,5 +1,5 @@
 import { Storage } from "./types/storage";
-import { ref, onValue, get } from "firebase/database";
+import { ref, onValue } from "firebase/database";
 import { rtdb } from "./rtdb";
 import { Play } from "./types/play";
 import { Router } from "@vaadin/router";
@@ -99,6 +99,9 @@ export const state = {
   },
   async createNewGame() {
     const cs = this.getState()
+    if (!cs.userName) {
+      throw "falta ingresar usuario"
+    }
     const res = await fetch(`${this.apiUrl}/?userName=${cs.userName}`, {
       method: "post",
       headers: {
@@ -154,9 +157,9 @@ export const state = {
       return
     }
   },
-  async listenToRoom() {
-    const cs = this.getState();
-    const room = ref(rtdb, `/rooms/${cs.rtdbRoomId}/${cs.roomId}`);
+  listenToRoom() {
+    const { rtdbRoomId, roomId } = this.getState();
+    const room = ref(rtdb, `/rooms/${rtdbRoomId}/${roomId}`);
     onValue(room, (snapShot) => {
       const data = snapShot.val()
       const cs = this.getState();
