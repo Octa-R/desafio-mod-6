@@ -9,7 +9,7 @@
     "build:front": "parcel build ./client/index.html --dist-dir public",
     "build:api": "tsc",
     "build": "yarn build:front && yarn build:api",
-    "start": "node ./server/index.js"
+    "start": "node ./dist/index.js"
   },
   "dependencies": {
     "@vaadin/router": "^1.7.4",

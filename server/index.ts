@@ -1,6 +1,7 @@
 import * as express from "express";
 import helmet from "helmet";
-
+import * as dotenv from "dotenv";
+dotenv.config();
 const port = process.env.PORT || 3000;
 const app = express();
 //--------------
