@@ -1,6 +1,5 @@
 import { customAlphabet } from "nanoid";
 import { rtdb, firestore } from "../db";
-import * as admin from "firebase-admin";
 //--------------------------------------------------------------------------------------------
 const roomsCollection = firestore.collection("rooms");
 const shortId = customAlphabet("0123456789ABCDEF", 6);
@@ -164,11 +163,19 @@ const joinRoom = async (req, res) => {
 
   const roomDoc = await roomsCollection.doc(roomId.toString()).get();
   const roomData = roomDoc.data();
-  const { player2 } = roomData;
+  const { player2, player1 } = roomData;
   if (player2) {
     res.status(400).json({
       ok: false,
       message: "la room ya esta llena"
+    });
+    return;
+  }
+
+  if (player1.name === userName) {
+    res.status(400).json({
+      ok: false,
+      message: "El nombre ya esta usado por el contrincante"
     });
     return;
   }
