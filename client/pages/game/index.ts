@@ -12,6 +12,7 @@ class GamePage extends HTMLElement {
     const unsubscribe = state.subscribe(() => {
       const cs = state.getState();
       if (cs.opponentChoice && cs.playerChoice) {
+        console.log("se disparo la callback, y ambos jugadores eligieron, finalizando juego")
         this.eligieronAmbos = true;
         unsubscribe();
         this.endGame();
@@ -27,23 +28,23 @@ class GamePage extends HTMLElement {
     const handList = this.shadow.querySelectorAll("hand-component");
     handList.forEach((item) => {
       item.addEventListener("player-move", (e) => {
-        const { detail } = e as any;
-        const playerMove: Play = detail.move;
+        const playerMove: Play = (<CustomEvent>e).detail.move
         state.move(playerMove);
       });
     });
     const counter = <HTMLElement>this.shadow.querySelector("counter-component");
     counter.addEventListener("finished", () => {
-      // "termino la cuenta regresiva  redirigiendo a /instructions")
+      console.log("se disparo evento finished del counter redirigiendo a /instructions")
       this.endGame();
     });
   }
   endGame() {
-    if (this.eligieronAmbos) {
-      //("termino la cuenta regresiva y ambos eligieron redirigiendo a /game-over")
+    const cs = state.getState();
+    if (cs.opponentChoice && cs.playerChoice) {
+      console.log("termino la cuenta regresiva y ambos eligieron redirigiendo a /game-over")
       this.showHandsAnimation();
     } else {
-      //"termino la cuenta regresiva y no eligieron redirigiendo a /instructions")
+      console.log("termino la cuenta regresiva y no eligieron redirigiendo a /instructions")
       Router.go("/instructions");
     }
   }

@@ -43,9 +43,10 @@ function getWinner(player1, player2): "empate" | string {
   }
 }
 
-function listenToMoves(rtdbRoomId: string, roomId: string) {
+function checkMoves(rtdbRoomId: string, roomId: string) {
   const roomRef = rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}`)
-  roomRef.on("value", (snapshot) => {
+  roomRef.once("value", (snapshot) => {
+    console.log("se ejecuto la lectura de la rtdb en checkMoves")
     if (!snapshot.exists) {
       return
     }
@@ -59,6 +60,8 @@ function listenToMoves(rtdbRoomId: string, roomId: string) {
       // ambos jugadores hicieron su jugada
       const winner = getWinner(player1, player2);
       const loser = winner === player1.name ? player2.name : player1.name;
+
+      console.log("winner: ", winner)
 
       const roomNewState = {
         [player1Name]: {
@@ -80,7 +83,6 @@ function listenToMoves(rtdbRoomId: string, roomId: string) {
         roomNewState[loser].result = "loser"
       }
       rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}`).set(roomNewState)
-      // rtdb.ref(`/rooms/${rtdbRoomId}/${roomId}/${winner}/score`).set(admin.database.ServerValue.increment(1))
     }
   })
   return roomRef
@@ -198,10 +200,6 @@ const joinRoom = async (req, res) => {
         id: userId
       }
     });
-  const ref = listenToMoves(rtdbRoomId, roomId)
-  setTimeout(() => {
-    ref.off()
-  }, 4000000)
 
   res.json({
     ok: true,
@@ -295,6 +293,7 @@ const makeMove = async (req, res) => {
   }
   try {
     await rtdb.ref().update(updates)
+    checkMoves(rtdbRoomId, roomId)
     res
       .json({
         ok: true,
