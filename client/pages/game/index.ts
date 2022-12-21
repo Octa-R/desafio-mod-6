@@ -5,15 +5,15 @@ import { Play } from "../../types/play";
 const imageURL = require("url:../../img/fondo.png");
 class GamePage extends HTMLElement {
   shadow: ShadowRoot;
-  eligieronAmbos = false;
+  gameEnded = false;
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
     const unsubscribe = state.subscribe(() => {
       const cs = state.getState();
       if (cs.opponentChoice && cs.playerChoice) {
-        console.log("se disparo la callback, y ambos jugadores eligieron, finalizando juego")
-        this.eligieronAmbos = true;
+        console.log("se disparo la callback, y ambos jugadores eligieron, se ejecutara endGame()")
+        this.gameEnded = true;
         unsubscribe();
         this.endGame();
       }
@@ -34,16 +34,22 @@ class GamePage extends HTMLElement {
     });
     const counter = <HTMLElement>this.shadow.querySelector("counter-component");
     counter.addEventListener("finished", () => {
-      console.log("se disparo evento finished del counter redirigiendo a /instructions")
+      console.log("se disparo evento finished del counter se ejecutara endGame()")
+      this.gameEnded = true;
       this.endGame();
     });
   }
   endGame() {
     const cs = state.getState();
+
     if (cs.opponentChoice && cs.playerChoice) {
       console.log("termino la cuenta regresiva y ambos eligieron redirigiendo a /game-over")
       this.showHandsAnimation();
     } else {
+      if (this.gameEnded) {
+        console.log("estamos en el else de endGame pero el juego ya termino")
+        return
+      }
       console.log("termino la cuenta regresiva y no eligieron redirigiendo a /instructions")
       Router.go("/instructions");
     }
