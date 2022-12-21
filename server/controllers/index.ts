@@ -13,10 +13,7 @@ async function userExists(roomId, userName, userId): Promise<boolean> {
   const roomData = roomDoc.data();
   const { player1, player2 } = roomData;
   const userArray = [player1, player2];
-  const userExists = userArray.find(user => {
-    return user.name === userName && user.id === userId
-  })
-  return userExists
+  return userArray.find(user => user.name === userName && user.id === userId)
 }
 
 async function roomExists(roomId): Promise<boolean> {

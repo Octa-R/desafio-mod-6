@@ -34,7 +34,7 @@ class GamePage extends HTMLElement {
     });
     const counter = <HTMLElement>this.shadow.querySelector("counter-component");
     counter.addEventListener("finished", () => {
-      console.log("se disparo evento finished del counter se ejecutara endGame()")
+      //"se disparo evento finished del counter se ejecutara endGame()")
       this.gameEnded = true;
       this.endGame();
     });
@@ -43,14 +43,14 @@ class GamePage extends HTMLElement {
     const cs = state.getState();
 
     if (cs.opponentChoice && cs.playerChoice) {
-      console.log("termino la cuenta regresiva y ambos eligieron redirigiendo a /game-over")
+      //"termino la cuenta regresiva y ambos eligieron redirigiendo a /game-over")
       this.showHandsAnimation();
     } else {
       if (this.gameEnded) {
-        console.log("estamos en el else de endGame pero el juego ya termino")
+        //"estamos en el else de endGame pero el juego ya termino")
         return
       }
-      console.log("termino la cuenta regresiva y no eligieron redirigiendo a /instructions")
+      //"termino la cuenta regresiva y no eligieron redirigiendo a /instructions")
       Router.go("/instructions");
     }
   }
